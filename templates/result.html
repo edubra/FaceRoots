@@ -1,0 +1,16 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FaceRoots - Resultado</title>
+</head>
+<body>
+    <h1>Seu Resultado:</h1>
+    <ul>
+        {% for key, value in result.items() %}
+            <li>{{ key }}: {{ value }}%</li>
+        {% endfor %}
+    </ul>
+    <a href="/">Voltar</a>
+</body>
+</html>
