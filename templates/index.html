@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>FaceRoots - Descubra suas raízes!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f5f3eb;
+        }
+        h1 {
+            color: #4a643d;
+            margin-top: 20px;
+        }
+        .icon-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 40px;
+        }
+        .icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #4a643d;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .icon:hover {
+            background: #3a5230;
+        }
+        .icon img {
+            width: 60px;
+            height: 60px;
+        }
+        .preview-container {
+            margin-top: 30px;
+            display: none;
+        }
+        .preview-container img {
+            width: 250px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        .btns {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+        .btn {
+            padding: 10px 20px;
+            background: #4a643d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background: #3a5230;
+        }
+
+        /* Loader */
+        #loader {
+            display: none;
+            margin-top: 30px;
+        }
+        .spinner {
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #4a643d;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #loader p {
+            font-size: 14px;
+            color: #4a643d;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>FaceRoots</h1>
+    <p>Escolha como deseja enviar sua foto:</p>
+
+    <!-- Tela inicial com ícones -->
+    <div class="icon-container" id="initial-options">
+        <div class="icon" id="select-gallery">
+            <img src="https://img.icons8.com/ios-filled/100/ffffff/image.png" alt="Galeria">
+        </div>
+        <div class="icon" id="open-camera">
+            <img src="https://img.icons8.com/ios-filled/100/ffffff/camera.png" alt="Câmera">
+        </div>
+    </div>
+
+    <!-- Preview da imagem escolhida -->
+    <div class="preview-container" id="preview-container">
+        <img id="preview-img" src="" alt="Preview">
+        <div class="btns">
+            <button class="btn" id="change-photo">Usar outra foto</button>
+            <button class="btn" id="continue-btn">Continuar</button>
+        </div>
+    </div>
+
+    <!-- Formulário oculto -->
+    <form id="upload-form" method="POST" enctype="multipart/form-data" style="display:none;">
+        <input type="file" name="file" id="file-input" accept="image/*">
+    </form>
+
+    <!-- Câmera oculta -->
+    <video id="video" width="320" height="240" autoplay style="display:none;"></video>
+    <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+
+    <!-- Loader -->
+    <div id="loader">
+        <div class="spinner"></div>
+        <p>Analisando seu rosto, aguarde...</p>
+    </div>
+
+    <script>
+        const initialOptions = document.getElementById("initial-options");
+        const previewContainer = document.getElementById("preview-container");
+        const previewImg = document.getElementById("preview-img");
+        const changePhotoBtn = document.getElementById("change-photo");
+        const continueBtn = document.getElementById("continue-btn");
+        const fileInput = document.getElementById("file-input");
+        const uploadForm = document.getElementById("upload-form");
+        const loader = document.getElementById("loader");
+
+        const selectGallery = document.getElementById("select-gallery");
+        const openCamera = document.getElementById("open-camera");
+
+        const video = document.getElementById("video");
+        const canvas = document.getElementById("canvas");
+        let stream;
+
+        // ✅ Escolher da galeria
+        selectGallery.addEventListener("click", () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener("change", () => {
+            const file = fileInput.files[0];
+            if (file) {
+                previewImg.src = URL.createObjectURL(file);
+                initialOptions.style.display = "none";
+                previewContainer.style.display = "block";
+            }
+        });
+
+        // ✅ Abrir câmera
+        openCamera.addEventListener("click", async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = stream;
+                video.style.display = "block";
+                initialOptions.style.display = "none";
+
+                // Captura após 2 segundos (poderia colocar um botão "capturar" se quiser)
+                setTimeout(() => {
+                    const ctx = canvas.getContext("2d");
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    canvas.toBlob(blob => {
+                        const file = new File([blob], "selfie.png", { type: "image/png" });
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        fileInput.files = dataTransfer.files;
+                        previewImg.src = URL.createObjectURL(blob);
+                        previewContainer.style.display = "block";
+                        video.style.display = "none";
+                        stream.getTracks().forEach(track => track.stop());
+                    });
+                }, 2000);
+            } catch (err) {
+                alert("Erro ao acessar a câmera: " + err);
+            }
+        });
+
+        // ✅ Usar outra foto
+        changePhotoBtn.addEventListener("click", () => {
+            previewContainer.style.display = "none";
+            initialOptions.style.display = "flex";
+            fileInput.value = "";
+        });
+
+        // ✅ Continuar
+        continueBtn.addEventListener("click", () => {
+            loader.style.display = "block";
+            uploadForm.submit();
+        });
+    </script>
+</body>
+</html>
