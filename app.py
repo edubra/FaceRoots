@@ -192,7 +192,8 @@ def index():
 
     return render_template("index.html")
 
+# ✅ Carrega os encodings antes de qualquer worker iniciar
+load_or_create_encodings()
 
 if __name__ == "__main__":
-    load_or_create_encodings()
     app.run(host="0.0.0.0", port=8000, debug=True)
