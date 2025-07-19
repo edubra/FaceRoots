@@ -8,6 +8,8 @@
             font-family: Arial, sans-serif;
             text-align: center;
             background-color: #f5f3eb;
+            margin: 0;
+            padding: 0;
         }
         h1 {
             color: #4a643d;
@@ -88,34 +90,26 @@
             margin-top: 10px;
         }
 
-        /* Moldura da câmera */
-        #camera-container {
+        /* Câmera centralizada */
+        video {
             display: none;
-            position: relative;
-            margin: 20px auto;
             width: 70vw;
-            max-width: 400px;
-            aspect-ratio: 9 / 16;
-            background: black;
-            overflow: hidden;
+            height: auto;
+            margin: 20px auto 0 auto;
             border-radius: 10px;
-        }
-        #video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            position: relative;
         }
         #face-overlay {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-        #capture-btn {
-            margin-top: 15px;
+            top: 50%;
+            left: 50%;
+            width: 70vw;
+            height: auto;
+            transform: translate(-50%, -50%);
             display: none;
+            pointer-events: none;
+            opacity: 0.6;
+            border-radius: 10px;
         }
     </style>
 </head>
@@ -133,13 +127,6 @@
         </div>
     </div>
 
-    <!-- Moldura da câmera -->
-    <div id="camera-container">
-        <video id="video" autoplay playsinline></video>
-        <img id="face-overlay" src="/static/face_overlay.png" alt="Face Overlay">
-    </div>
-    <button class="btn" id="capture-btn">Tirar Foto</button>
-
     <!-- Preview da imagem escolhida -->
     <div class="preview-container" id="preview-container">
         <img id="preview-img" src="" alt="Preview">
@@ -154,7 +141,12 @@
         <input type="file" name="file" id="file-input" accept="image/*">
     </form>
 
-    <canvas id="canvas" style="display:none;"></canvas>
+    <!-- Câmera -->
+    <div style="position: relative; width: 100%; text-align: center;">
+        <video id="video" autoplay></video>
+        <img id="face-overlay" src="/static/face_overlay.png" alt="Overlay">
+        <canvas id="canvas" style="display:none;"></canvas>
+    </div>
 
     <!-- Loader -->
     <div id="loader">
@@ -176,15 +168,13 @@
         const openCamera = document.getElementById("open-camera");
 
         const video = document.getElementById("video");
-        const cameraContainer = document.getElementById("camera-container");
-        const captureBtn = document.getElementById("capture-btn");
         const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const faceOverlay = document.getElementById("face-overlay");
         let stream;
 
-        // ✅ Escolher da galeria
-        selectGallery.addEventListener("click", () => {
-            fileInput.click();
-        });
+        // ✅ Galeria
+        selectGallery.addEventListener("click", () => fileInput.click());
 
         fileInput.addEventListener("change", () => {
             const file = fileInput.files[0];
@@ -195,50 +185,71 @@
             }
         });
 
-        // ✅ Abrir câmera
+        // ✅ Abrir câmera com overlay e botão "Tirar Foto"
         openCamera.addEventListener("click", async () => {
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: { aspectRatio: 9/16 } });
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 video.srcObject = stream;
-                cameraContainer.style.display = "block";
-                captureBtn.style.display = "inline-block";
+                video.style.display = "block";
+                faceOverlay.style.display = "block";
                 initialOptions.style.display = "none";
+
+                const captureBtn = document.createElement("button");
+                captureBtn.textContent = "Tirar Foto";
+                captureBtn.classList.add("btn");
+                captureBtn.style.position = "absolute";
+                captureBtn.style.bottom = "20px";
+                captureBtn.style.left = "50%";
+                captureBtn.style.transform = "translateX(-50%)";
+                document.body.appendChild(captureBtn);
+
+                captureBtn.addEventListener("click", () => {
+                    const videoRatio = video.videoWidth / video.videoHeight;
+                    const targetRatio = 9 / 16;
+
+                    let cropWidth = video.videoWidth;
+                    let cropHeight = video.videoHeight;
+
+                    if (videoRatio > targetRatio) {
+                        cropWidth = video.videoHeight * targetRatio;
+                    } else {
+                        cropHeight = video.videoWidth / targetRatio;
+                    }
+
+                    const offsetX = (video.videoWidth - cropWidth) / 2;
+                    const offsetY = (video.videoHeight - cropHeight) / 2;
+
+                    canvas.width = cropWidth;
+                    canvas.height = cropHeight;
+                    ctx.drawImage(video, offsetX, offsetY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
+                    canvas.toBlob(blob => {
+                        const file = new File([blob], "selfie.png", { type: "image/png" });
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        fileInput.files = dataTransfer.files;
+                        previewImg.src = URL.createObjectURL(blob);
+                        previewContainer.style.display = "block";
+
+                        video.style.display = "none";
+                        faceOverlay.style.display = "none";
+                        captureBtn.remove();
+                        stream.getTracks().forEach(track => track.stop());
+                    });
+                });
             } catch (err) {
                 alert("Erro ao acessar a câmera: " + err);
             }
         });
 
-        // ✅ Tirar foto manualmente
-        captureBtn.addEventListener("click", () => {
-            const ctx = canvas.getContext("2d");
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            canvas.toBlob(blob => {
-                const file = new File([blob], "selfie.png", { type: "image/png" });
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                fileInput.files = dataTransfer.files;
-
-                previewImg.src = URL.createObjectURL(blob);
-                previewContainer.style.display = "block";
-                cameraContainer.style.display = "none";
-                captureBtn.style.display = "none";
-
-                // Para a câmera
-                stream.getTracks().forEach(track => track.stop());
-            });
-        });
-
-        // ✅ Usar outra foto
+        // ✅ Trocar foto
         changePhotoBtn.addEventListener("click", () => {
             previewContainer.style.display = "none";
             initialOptions.style.display = "flex";
             fileInput.value = "";
         });
 
-        // ✅ Continuar
+        // ✅ Enviar
         continueBtn.addEventListener("click", () => {
             loader.style.display = "block";
             uploadForm.submit();
