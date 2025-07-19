@@ -1,21 +1,25 @@
 from flask import Flask, request, render_template
 import os
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # <-- diretório do app
-ENCODINGS_FILE = os.path.join(BASE_DIR, "encodings.pickle")
-DATASET_DIR = os.path.join(BASE_DIR, "data")
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
+import sys
 import face_recognition
 import numpy as np
 import pickle
 from PIL import Image, ImageDraw, ImageFont
 from group_labels import group_labels
 
-app = Flask(__name__)
-UPLOAD_FOLDER = "static/uploads"
+# ✅ Diretório absoluto do projeto
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(BASE_DIR)
+
+# ✅ Caminhos absolutos
+ENCODINGS_FILE = os.path.join(BASE_DIR, "encodings.pickle")
+DATASET_DIR = os.path.join(BASE_DIR, "data")
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
+
+# ✅ Garante que a pasta de uploads existe
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-ENCODINGS_FILE = "encodings.pickle"
-DATASET_DIR = "data"
+app = Flask(__name__)
 
 encodings = []
 labels = []
@@ -132,7 +136,7 @@ def index():
             # ✅ Filtrar etnias irrelevantes (<20%)
             percentages = {g: v for g, v in percentages.items() if v >= 20}
 
-            # ✅ Agrupamento por macro-região (corrigido - soma total = 100%)
+            # ✅ Agrupamento por macro-região
             macro_groups = {
                 "EUROPA": ["european_"],
                 "ÁSIA": ["asian_"],
