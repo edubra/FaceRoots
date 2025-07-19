@@ -117,9 +117,10 @@
         <input type="file" name="file" id="file-input" accept="image/*">
     </form>
 
-    <!-- Câmera oculta -->
-    <video id="video" width="320" height="240" autoplay style="display:none; margin-top:20px;"></video>
+    <!-- Câmera -->
+    <video id="video" width="320" height="240" autoplay style="display:none;"></video>
     <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+    <button class="btn" id="capture-btn" style="display:none; margin-top:10px;">Tirar Foto</button>
 
     <!-- Loader -->
     <div id="loader">
@@ -142,9 +143,8 @@
 
         const video = document.getElementById("video");
         const canvas = document.getElementById("canvas");
-
+        const captureBtn = document.getElementById("capture-btn");
         let stream;
-        let captureBtn;
 
         // ✅ Escolher da galeria
         selectGallery.addEventListener("click", () => {
@@ -160,44 +160,51 @@
             }
         });
 
-        // ✅ Abrir câmera (captura manual)
+        // ✅ Abrir câmera (agora manual no iOS e Android)
         openCamera.addEventListener("click", async () => {
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                video.srcObject = stream;
-                video.style.display = "block";
-                initialOptions.style.display = "none";
-
-                // ✅ Criar botão "Capturar Foto" se não existir
-                if (!captureBtn) {
-                    captureBtn = document.createElement("button");
-                    captureBtn.textContent = "Capturar Foto";
-                    captureBtn.className = "btn";
-                    captureBtn.style.marginTop = "10px";
-                    video.insertAdjacentElement("afterend", captureBtn);
-
-                    captureBtn.addEventListener("click", () => {
-                        const ctx = canvas.getContext("2d");
-                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                        canvas.toBlob(blob => {
-                            const file = new File([blob], "selfie.png", { type: "image/png" });
-                            const dataTransfer = new DataTransfer();
-                            dataTransfer.items.add(file);
-                            fileInput.files = dataTransfer.files;
-                            previewImg.src = URL.createObjectURL(blob);
-
-                            previewContainer.style.display = "block";
-                            video.style.display = "none";
-                            captureBtn.style.display = "none";
-                            stream.getTracks().forEach(track => track.stop());
+                // 🔄 Polyfill iOS
+                if (!navigator.mediaDevices) navigator.mediaDevices = {};
+                if (!navigator.mediaDevices.getUserMedia) {
+                    navigator.mediaDevices.getUserMedia = function(constraints) {
+                        const getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                        if (!getUserMedia) {
+                            return Promise.reject(new Error("getUserMedia não suportado neste navegador."));
+                        }
+                        return new Promise((resolve, reject) => {
+                            getUserMedia.call(navigator, constraints, resolve, reject);
                         });
-                    });
+                    };
                 }
 
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+                video.srcObject = stream;
+                video.style.display = "block";
                 captureBtn.style.display = "inline-block";
+                initialOptions.style.display = "none";
             } catch (err) {
-                alert("Erro ao acessar a câmera: " + err);
+                alert("Erro ao acessar a câmera: " + err.message);
             }
+        });
+
+        // ✅ Capturar foto ao clicar no botão
+        captureBtn.addEventListener("click", () => {
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob(blob => {
+                const file = new File([blob], "selfie.png", { type: "image/png" });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+
+                previewImg.src = URL.createObjectURL(blob);
+                previewContainer.style.display = "block";
+
+                video.style.display = "none";
+                captureBtn.style.display = "none";
+                if (stream) stream.getTracks().forEach(track => track.stop());
+            });
         });
 
         // ✅ Usar outra foto
