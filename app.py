@@ -90,7 +90,7 @@ def index():
     if request.method == "POST":
         file = request.files["file"]
         if file:
-        from PIL import Image
+         from PIL import Image
 
         # Caminho para salvar a imagem compactada
         path = os.path.join(UPLOAD_FOLDER, file.filename)
@@ -169,7 +169,7 @@ def index():
                     })
 
             # ✅ Top3 para imagem compartilhável
-            top3 = sorted(percentages.items(), key=lambda x: x[1], reverse=True)[:3]
+        top3 = sorted(percentages.items(), key=lambda x: x[1], reverse=True)[:3]
         img_compartilhavel = gerar_imagem_resultado(path, top3)
 
         return render_template(
