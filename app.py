@@ -181,13 +181,13 @@ def index():
 
             return render_template(
                 "result.html",
-                image_path=path,
+                image_path = f"static/uploads/{os.path.basename(path)}",
                 macro_sorted=macro_sorted,
                 detailed_groups=detailed_groups,
                 map_data=map_data,
                 miscigenacao=miscigenacao,
                 group_labels=group_labels,
-                img_compartilhavel=img_compartilhavel
+                img_compartilhavel = f"static/uploads/{os.path.basename(img_compartilhavel)}
             )
 
     return render_template("index.html")
