@@ -49,32 +49,24 @@ def load_or_create_encodings():
     print(f"✅ Encodings salvos ({len(encodings)} rostos).")
 
 
-# ✅ Cálculo da miscigenação com índice ajustado (0% = homogêneo, 100% = extremamente miscigenado)
-def calcular_miscigenacao(percentages, limite=20):
-    """
-    Calcula um índice de miscigenação mais realista.
-    - Ignora grupos com menos de 'limite'% (considerados ruído).
-    - Se um grupo domina (>70%), miscigenação quase nula.
-    """
+# ✅ Função para compactar imagem antes de processar
+def compactar_imagem(input_path, max_size=800):
+    img = Image.open(input_path).convert("RGB")
 
-    # 🔹 1. Filtrar grupos irrelevantes
-    filtrados = {g: v for g, v in percentages.items() if v >= limite}
+    if img.width > max_size:
+        ratio = max_size / float(img.width)
+        new_height = int(float(img.height) * ratio)
+        img = img.resize((max_size, new_height), Image.LANCZOS)
 
-    if not filtrados:
-        return 0.0
+    img.save(input_path, optimize=True, quality=85)
+    return input_path
 
-    max_grupo = max(filtrados.values())
-    total = sum(filtrados.values())
 
-    # 🔹 2. Penalizar dominância
-    if max_grupo >= 70:
-        return round(5 + (100 - max_grupo) * 0.1, 1)  # ~5-10% miscigenação
-    if max_grupo >= 60:
-        return round(10 + (100 - max_grupo) * 0.3, 1)  # ~10-20% miscigenação
-
-    # 🔹 3. Calcular miscigenação só para casos realmente misturados
-    proporcoes = [v / total for v in filtrados.values()]
-    diversidade = 1 - sum([p ** 2 for p in proporcoes])
+# ✅ Cálculo da miscigenação corrigido
+def calcular_miscigenacao(macro_percent):
+    total = sum(macro_percent.values()) or 1
+    proporcoes = [v / total for v in macro_percent.values()]
+    diversidade = 1 - sum([p ** 2 for p in proporcoes])  # Índice de Gini-Simpson
     return round(diversidade * 100, 1)
 
 
@@ -114,6 +106,9 @@ def index():
             path = os.path.join(UPLOAD_FOLDER, file.filename)
             file.save(path)
 
+            # ✅ Compacta automaticamente antes de processar
+            compactar_imagem(path)
+
             img = face_recognition.load_image_file(path)
             face_locations = face_recognition.face_locations(img)
 
@@ -124,13 +119,16 @@ def index():
             distances = face_recognition.face_distance(encodings, img_enc)
             similarities = 1 - distances
 
-            # ✅ Percentuais por etnia
+            # ✅ Percentuais médios por grupo
             group_scores = {}
             for label, sim in zip(labels, similarities):
                 group_scores.setdefault(label, []).append(sim)
             percentages = {g: round(np.mean(s) * 100, 1) for g, s in group_scores.items()}
 
-            # ✅ Agrupamento por macro-região
+            # ✅ Filtrar etnias irrelevantes (<20%)
+            percentages = {g: v for g, v in percentages.items() if v >= 20}
+
+            # ✅ Agrupamento por macro-região (corrigido - soma total = 100%)
             macro_groups = {
                 "EUROPA": ["european_"],
                 "ÁSIA": ["asian_"],
@@ -141,48 +139,36 @@ def index():
             }
 
             grouped_scores = {}
-            for label, score in percentages.items():
-                added = False
-                for macro, keywords in macro_groups.items():
-                    if any(label.startswith(k) for k in keywords):
-                        grouped_scores.setdefault(macro, 0)
-                        grouped_scores[macro] += score
-                        added = True
-                        break
-                if not added:
-                    grouped_scores.setdefault("OUTROS", 0)
-                    grouped_scores["OUTROS"] += score
+            detailed_groups = {}
 
-            # ✅ Normalização para somar 100%
-            total_score = sum(grouped_scores.values()) or 1
-            normalized_scores = {m: round((v / total_score) * 100, 1) for m, v in grouped_scores.items()}
+            for macro, keywords in macro_groups.items():
+                etnias_macro = {g: v for g, v in percentages.items() if any(g.startswith(k) for k in keywords)}
+                if etnias_macro:
+                    grouped_scores[macro] = sum(etnias_macro.values())
+                    detailed_groups[macro] = sorted(etnias_macro.items(), key=lambda x: x[1], reverse=True)
+
+            total_macro = sum(grouped_scores.values()) or 1
+            normalized_scores = {m: round((v / total_macro) * 100, 1) for m, v in grouped_scores.items()}
             macro_sorted = sorted(normalized_scores.items(), key=lambda x: x[1], reverse=True)
 
-            # ✅ Grupos detalhados
-            detailed_groups = {}
+            # ✅ Miscigenação com apenas grupos significativos (>5%)
+            miscigenacao = calcular_miscigenacao({m: v for m, v in normalized_scores.items() if v >= 5})
+
+            # ✅ Dados do mapa
+            map_data = []
             for macro, _ in macro_sorted:
-                detailed_groups[macro] = [
-                    (lbl, percentages[lbl]) for lbl in percentages.keys()
-                    if any(lbl.startswith(k) for k in macro_groups.get(macro, []))
-                ]
+                for g, sc in detailed_groups.get(macro, []):
+                    info = group_labels.get(g, {"label": g, "desc": "", "coords": [0, 0]})
+                    map_data.append({
+                        "label": info["label"],
+                        "desc": info["desc"],
+                        "lat": info["coords"][0],
+                        "lon": info["coords"][1],
+                        "score": sc
+                    })
 
-            # ✅ Mapa (top 3 etnias)
+            # ✅ Top3 para imagem compartilhável
             top3 = sorted(percentages.items(), key=lambda x: x[1], reverse=True)[:3]
-            map_data = [
-                {
-                    "label": group_labels.get(g, {}).get("label", g),
-                    "desc": group_labels.get(g, {}).get("desc", ""),
-                    "lat": group_labels.get(g, {}).get("coords", [0, 0])[0],
-                    "lon": group_labels.get(g, {}).get("coords", [0, 0])[1],
-                    "score": s
-                }
-                for g, s in top3
-            ]
-
-            # ✅ Miscigenação
-            miscigenacao = calcular_miscigenacao(percentages)
-
-            # ✅ Imagem para compartilhamento
             img_compartilhavel = gerar_imagem_resultado(path, top3)
 
             return render_template(
@@ -191,7 +177,6 @@ def index():
                 macro_sorted=macro_sorted,
                 detailed_groups=detailed_groups,
                 map_data=map_data,
-                top3=top3,
                 miscigenacao=miscigenacao,
                 group_labels=group_labels,
                 img_compartilhavel=img_compartilhavel

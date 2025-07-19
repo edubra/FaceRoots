@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>FaceRoots - Resultados</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #f8f8f8;
+            padding: 20px;
+        }
+        h1, h2, h3 {
+            color: #4a643d;
+        }
+        img {
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* Barra de miscigenação */
+        .misc-bar-container {
+            width: 80%;
+            margin: 0 auto 20px auto;
+            background: #ddd;
+            border-radius: 20px;
+            height: 25px;
+            overflow: hidden;
+        }
+        .misc-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4caf50, #ff9800);
+            text-align: center;
+            color: white;
+            line-height: 25px;
+            font-size: 14px;
+        }
+
+        /* Mapa */
+        #map {
+            width: 100%;
+            height: 400px;
+            margin: 20px auto;
+            border-radius: 10px;
+        }
+
+        /* Cards recolhíveis */
+        .macro-groups {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: left;
+        }
+        .macro-card {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: background 0.3s;
+        }
+        .macro-card:hover {
+            background: #e8e8e8;
+        }
+        .details {
+            display: none;
+            margin-top: 10px;
+        }
+
+        /* Botões de compartilhamento */
+        .share-buttons {
+            margin-top: 20px;
+        }
+        .share-buttons a {
+            display: inline-block;
+            padding: 10px 15px;
+            margin: 5px;
+            background: #4a643d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .share-buttons a:hover {
+            background: #3a5230;
+        }
+
+        /* Botão de refazer teste */
+        .retry-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background: #ff9800;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .retry-btn:hover {
+            background: #e68900;
+        }
+
+    </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+    <h1>FaceRoots - Seus Resultados</h1>
+
+    <!-- ✅ 1 - Foto analisada -->
+    <img src="{{ image_path }}" alt="Sua foto" width="200">
+
+    <!-- ✅ 2 - Barra de miscigenação -->
+    <h2>Nível de miscigenação</h2>
+    <div class="misc-bar-container">
+        <div class="misc-bar" style="width: {{ miscigenacao }}%;">{{ miscigenacao }}%</div>
+    </div>
+
+    <!-- ✅ 3 - Mapa -->
+    <h2>Mapa das suas principais origens</h2>
+    <div id="map"></div>
+
+    <!-- ✅ 4 - Cards recolhíveis -->
+    <h2 style="margin-top:20px;">Suas principais origens</h2>
+    <div class="macro-groups">
+        {% for macro, score in macro_sorted %}
+        <div class="macro-card" onclick="toggleDetails('{{ loop.index0 }}')">
+            <h3>{{ macro }} - {{ score }}%</h3>
+            <div id="details-{{ loop.index0 }}" class="details">
+                {% for group, sc in detailed_groups[macro] %}
+                <p><strong>{{ group_labels.get(group, {}).get('label', group) }}</strong>: {{ sc }}%</p>
+                <p style="font-size:12px;color:#555;">
+                    {{ group_labels.get(group, {}).get('desc', '') }}
+                </p>
+                <hr>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- ✅ 5 - Botões de compartilhamento -->
+    <div class="share-buttons">
+        <h3>Compartilhe seu resultado!</h3>
+        <a href="https://api.whatsapp.com/send?text=Veja minhas origens no FaceRoots!" target="_blank">WhatsApp</a>
+        <a href="#" onclick="alert('Compartilhar no Instagram Stories requer download manual da imagem.')">Instagram Stories</a>
+        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.url }}" target="_blank">Facebook</a>
+        <a href="https://t.me/share/url?url={{ request.url }}&text=Veja minhas origens no FaceRoots!" target="_blank">Telegram</a>
+    </div>
+
+    <!-- ✅ 6 - Imagem gerada para compartilhamento -->
+    <h3>Imagem para compartilhar</h3>
+    <img src="{{ img_compartilhavel }}" alt="Resultado compartilhável" width="300">
+
+    <!-- ✅ 7 - Botão refazer -->
+    <a href="/" class="retry-btn">Refazer Teste</a>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // ✅ Mapa com círculos grandes e transparentes
+        var map = L.map('map').setView([20, 0], 2);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        var colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown'];
+        {% for data in map_data %}
+        L.circle([{{ data.lat }}, {{ data.lon }}], {
+            color: colors[{{ loop.index0 }} % colors.length],
+            fillColor: colors[{{ loop.index0 }} % colors.length],
+            fillOpacity: 0.3,
+            radius: {{ data.score }} * 40000 // Círculos grandes
+        }).addTo(map).bindPopup("<b>{{ data.label }}</b><br>{{ data.score }}%");
+        {% endfor %}
+
+        if ({{ map_data|length }} > 0) {
+            var bounds = [
+                {% for data in map_data %}
+                [{{ data.lat }}, {{ data.lon }}],
+                {% endfor %}
+            ];
+            map.fitBounds(bounds, { padding: [30, 30] });
+        }
+
+        // ✅ Cards recolhíveis
+        function toggleDetails(id) {
+            const details = document.getElementById("details-" + id);
+            details.style.display = details.style.display === "block" ? "none" : "block";
+        }
+    </script>
+</body>
+</html>
