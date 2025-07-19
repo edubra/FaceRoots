@@ -118,7 +118,7 @@
     </form>
 
     <!-- Câmera oculta -->
-    <video id="video" width="320" height="240" autoplay style="display:none;"></video>
+    <video id="video" width="320" height="240" autoplay style="display:none; margin-top:20px;"></video>
     <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
 
     <!-- Loader -->
@@ -142,7 +142,9 @@
 
         const video = document.getElementById("video");
         const canvas = document.getElementById("canvas");
+
         let stream;
+        let captureBtn;
 
         // ✅ Escolher da galeria
         selectGallery.addEventListener("click", () => {
@@ -158,7 +160,7 @@
             }
         });
 
-        // ✅ Abrir câmera
+        // ✅ Abrir câmera (captura manual)
         openCamera.addEventListener("click", async () => {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -166,21 +168,33 @@
                 video.style.display = "block";
                 initialOptions.style.display = "none";
 
-                // Captura após 2 segundos (poderia colocar um botão "capturar" se quiser)
-                setTimeout(() => {
-                    const ctx = canvas.getContext("2d");
-                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                    canvas.toBlob(blob => {
-                        const file = new File([blob], "selfie.png", { type: "image/png" });
-                        const dataTransfer = new DataTransfer();
-                        dataTransfer.items.add(file);
-                        fileInput.files = dataTransfer.files;
-                        previewImg.src = URL.createObjectURL(blob);
-                        previewContainer.style.display = "block";
-                        video.style.display = "none";
-                        stream.getTracks().forEach(track => track.stop());
+                // ✅ Criar botão "Capturar Foto" se não existir
+                if (!captureBtn) {
+                    captureBtn = document.createElement("button");
+                    captureBtn.textContent = "Capturar Foto";
+                    captureBtn.className = "btn";
+                    captureBtn.style.marginTop = "10px";
+                    video.insertAdjacentElement("afterend", captureBtn);
+
+                    captureBtn.addEventListener("click", () => {
+                        const ctx = canvas.getContext("2d");
+                        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        canvas.toBlob(blob => {
+                            const file = new File([blob], "selfie.png", { type: "image/png" });
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(file);
+                            fileInput.files = dataTransfer.files;
+                            previewImg.src = URL.createObjectURL(blob);
+
+                            previewContainer.style.display = "block";
+                            video.style.display = "none";
+                            captureBtn.style.display = "none";
+                            stream.getTracks().forEach(track => track.stop());
+                        });
                     });
-                }, 2000);
+                }
+
+                captureBtn.style.display = "inline-block";
             } catch (err) {
                 alert("Erro ao acessar a câmera: " + err);
             }
