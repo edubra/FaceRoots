@@ -1,5 +1,9 @@
 from flask import Flask, request, render_template
 import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # <-- diretório do app
+ENCODINGS_FILE = os.path.join(BASE_DIR, "encodings.pickle")
+DATASET_DIR = os.path.join(BASE_DIR, "data")
+UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
 import face_recognition
 import numpy as np
 import pickle
