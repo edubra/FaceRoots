@@ -64,6 +64,18 @@
             background: #3a5230;
         }
 
+        /* Moldura da câmera */
+        #camera-container {
+            display: none;
+            margin-top: 20px;
+        }
+        video {
+            width: 70vw;
+            max-width: 500px;
+            border: 5px solid #4a643d;
+            border-radius: 10px;
+        }
+
         /* Loader */
         #loader {
             display: none;
@@ -103,6 +115,15 @@
         </div>
     </div>
 
+    <!-- Moldura da câmera -->
+    <div id="camera-container">
+        <video id="video" autoplay playsinline></video>
+        <div class="btns">
+            <button class="btn" id="capture-btn">Tirar Foto</button>
+            <button class="btn" id="close-camera">Fechar Câmera</button>
+        </div>
+    </div>
+
     <!-- Preview da imagem escolhida -->
     <div class="preview-container" id="preview-container">
         <img id="preview-img" src="" alt="Preview">
@@ -117,10 +138,7 @@
         <input type="file" name="file" id="file-input" accept="image/*">
     </form>
 
-    <!-- Câmera -->
-    <video id="video" width="320" height="240" autoplay style="display:none;"></video>
     <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
-    <button class="btn" id="capture-btn" style="display:none; margin-top:10px;">Tirar Foto</button>
 
     <!-- Loader -->
     <div id="loader">
@@ -141,9 +159,11 @@
         const selectGallery = document.getElementById("select-gallery");
         const openCamera = document.getElementById("open-camera");
 
+        const cameraContainer = document.getElementById("camera-container");
         const video = document.getElementById("video");
-        const canvas = document.getElementById("canvas");
         const captureBtn = document.getElementById("capture-btn");
+        const closeCameraBtn = document.getElementById("close-camera");
+        const canvas = document.getElementById("canvas");
         let stream;
 
         // ✅ Escolher da galeria
@@ -160,10 +180,9 @@
             }
         });
 
-        // ✅ Abrir câmera (agora manual no iOS e Android)
+        // ✅ Abrir câmera dentro do site
         openCamera.addEventListener("click", async () => {
             try {
-                // 🔄 Polyfill iOS
                 if (!navigator.mediaDevices) navigator.mediaDevices = {};
                 if (!navigator.mediaDevices.getUserMedia) {
                     navigator.mediaDevices.getUserMedia = function(constraints) {
@@ -180,14 +199,14 @@
                 stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 video.srcObject = stream;
                 video.style.display = "block";
-                captureBtn.style.display = "inline-block";
+                cameraContainer.style.display = "block";
                 initialOptions.style.display = "none";
             } catch (err) {
                 alert("Erro ao acessar a câmera: " + err.message);
             }
         });
 
-        // ✅ Capturar foto ao clicar no botão
+        // ✅ Tirar foto manualmente
         captureBtn.addEventListener("click", () => {
             const ctx = canvas.getContext("2d");
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -201,10 +220,16 @@
                 previewImg.src = URL.createObjectURL(blob);
                 previewContainer.style.display = "block";
 
-                video.style.display = "none";
-                captureBtn.style.display = "none";
+                cameraContainer.style.display = "none";
                 if (stream) stream.getTracks().forEach(track => track.stop());
             });
+        });
+
+        // ✅ Fechar câmera sem capturar
+        closeCameraBtn.addEventListener("click", () => {
+            cameraContainer.style.display = "none";
+            initialOptions.style.display = "flex";
+            if (stream) stream.getTracks().forEach(track => track.stop());
         });
 
         // ✅ Usar outra foto
