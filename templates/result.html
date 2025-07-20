@@ -3,141 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <title>FaceRoots - Resultado</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f3eb;
-            margin: 0;
-            padding: 0;
-            color: #333;
-            text-align: center;
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center; 
+            background: #f5f5f5; 
+            margin: 0; 
+            padding: 0; 
         }
-        h1 {
-            color: #4a643d;
-            margin-top: 20px;
-            font-size: 2rem;
+        h1 { 
+            color: #3c4d35; 
+            margin-top: 20px; 
         }
-        .container {
-            max-width: 900px;
+
+        .miscigenacao-bar {
+            width: 80%;
+            max-width: 400px;
             margin: 20px auto;
-            padding: 15px;
-        }
-        .selfie {
-            width: 200px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-            margin-bottom: 20px;
-        }
-        .miscigenacao {
-            font-size: 1.2rem;
-            color: #4a643d;
-            margin-bottom: 20px;
-        }
-
-        /* ✅ Cards e mapa lado a lado */
-        .content {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .map-container {
-            width: 100%;
-            max-width: 100%;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            background: #ddd;
+            border-radius: 20px;
             overflow: hidden;
+            height: 25px;
         }
-        .map-container iframe {
-            width: 100%;
-            height: 350px;
-            border: none;
-            border-radius: 10px;
+        .miscigenacao-fill {
+            background: #4a643d;
+            height: 100%;
+            width: 0;
+            text-align: right;
+            color: #fff;
+            padding-right: 5px;
+            line-height: 25px;
+            font-size: 14px;
+            transition: width 1s ease-in-out;
         }
 
-        .cards {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .card {
-            background: white;
+        #map {
+            height: 400px;
+            width: 90%;
+            max-width: 800px;
+            margin: 20px auto;
             border-radius: 10px;
-            padding: 15px;
+            border: 2px solid #ccc;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            margin: 10px auto;
+            width: 90%;             /* ✅ mesma largura do mapa */
+            max-width: 800px;       /* ✅ mesma largura do mapa */
+            padding: 15px;          /* ✅ mais confortável */
             text-align: left;
-            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
         }
         .card h3 {
-            color: #4a643d;
             margin: 0 0 5px 0;
+            color: #4a643d;
             font-size: 1.1rem;
         }
-        .card p {
-            margin: 0;
-            font-size: 0.95rem;
-            color: #555;
+        .card .details {
+            display: none;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #333;
+        }
+        .etnia {
+            background: #f0f0f0;
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 5px;
+            cursor: pointer;
         }
 
-        /* ✅ Imagem compartilhável */
-        .compartilhar {
-            margin-top: 25px;
+        .share-buttons {
+            margin: 20px;
         }
-        .compartilhar img {
-            width: 100%;
-            max-width: 400px;
+        .share-buttons a {
+            display: inline-block;
+            margin: 5px;
+            padding: 10px 15px;
+            border-radius: 5px;
+            background: #4a643d;
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .resultado-img {
+            max-width: 300px;
+            margin: 20px auto;
+            display: block;
+            border: 1px solid #ccc;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
         }
 
-        /* ✅ Responsividade */
-        @media (max-width: 768px) {
-            .selfie {
-                width: 150px;
-            }
-            h1 {
-                font-size: 1.6rem;
-            }
-            .card {
-                padding: 12px;
-            }
+        .btn-refazer {
+            display: inline-block;
+            margin-top: 15px;
+            background: #3c4d35;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
         }
     </style>
 </head>
 <body>
-    <h1>Seu Resultado</h1>
-    <div class="container">
-        <img src="{{ image_path }}" alt="Sua foto" class="selfie">
-        <p class="miscigenacao">Índice de Miscigenação: <strong>{{ miscigenacao }}%</strong></p>
+    <h1>Resultado do FaceRoots</h1>
 
-        <div class="content">
-            <!-- ✅ Mapa -->
-            <div class="map-container">
-                <iframe
-                    src="https://maps.google.com/maps?q=0,0&hl=pt-br&z=2&output=embed"
-                    loading="lazy"></iframe>
+    <!-- 1 - Foto -->
+    <img src="{{ image_path }}" alt="Sua Foto" style="max-width:200px; border-radius:10px;">
+
+    <!-- 2 - Barrinha de miscigenação -->
+    <div style="margin: 20px auto; width: 80%; text-align: center;">
+        <p><strong>Miscigenação:</strong> {{ miscigenacao }}%</p>
+        <div style="width: 100%; background: #ddd; border-radius: 8px; height: 20px; overflow: hidden;">
+            <div id="barra-miscigenacao"
+                style="height: 100%; width: {{ miscigenacao }}%;
+                        background: linear-gradient(to right, 
+                            rgba(0,128,255,1) 0%, 
+                            rgba(0,255,0,1) 50%, 
+                            rgba(255,165,0,1) 100%);
+                        transition: width 0.5s ease;">
             </div>
-
-            <!-- ✅ Cards -->
-            <div class="cards">
-                {% for macro, score in macro_sorted %}
-                <div class="card">
-                    <h3>{{ macro }} - {{ score }}%</h3>
-                    {% for etnia, valor in detailed_groups[macro] %}
-                        <p>{{ group_labels[etnia]["label"] }}: {{ valor }}%</p>
-                    {% endfor %}
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- ✅ Imagem para compartilhar -->
-        <div class="compartilhar">
-            <p>Compartilhe suas origens:</p>
-            <img src="{{ img_compartilhavel }}" alt="Compartilhe">
         </div>
     </div>
+
+    <!-- 3 - Mapa -->
+    <div id="map"></div>
+
+    <!-- 4 - Cards -->
+    {% for macro, score in macro_sorted %}
+    <div class="card" onclick="toggleDetails('{{ macro }}')">
+        <h3>{{ macro }} - {{ score }}%</h3>
+        <div class="details" id="details-{{ macro }}">
+            {% for etnia, etnia_score in detailed_groups[macro] %}
+            <div class="etnia" onclick="focusEtnia('{{ group_labels[etnia]['lat'] }}', '{{ group_labels[etnia]['lon'] }}', '{{ group_labels[etnia]['label'] }}')">
+                {{ group_labels[etnia]['label'] }} - {{ etnia_score }}% <br>
+                <small>{{ group_labels[etnia]['desc'] }}</small>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- 5 - Botões de compartilhamento -->
+    <div class="share-buttons">
+        <a href="https://api.whatsapp.com/send?text=Olha%20meu%20resultado%20no%20FaceRoots!%20{{ request.host_url }}{{ img_compartilhavel }}" target="_blank">WhatsApp</a>
+        <a href="https://t.me/share/url?url={{ request.host_url }}{{ img_compartilhavel }}" target="_blank">Telegram</a>
+        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.host_url }}{{ img_compartilhavel }}" target="_blank">Facebook</a>
+    </div>
+
+    <!-- 6 - Imagem compartilhável -->
+    <img src="{{ img_compartilhavel }}" class="resultado-img">
+
+    <!-- 7 - Botão refazer -->
+    <a class="btn-refazer" href="/">Refazer o Teste</a>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        // --- MAPA ---
+        var map = L.map('map').setView([20,0], 2);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Círculos dos macro-grupos
+        var macroGroups = {{ macro_sorted|tojson }};
+        var colors = ['red','blue','green','orange','purple','brown'];
+        macroGroups.forEach((group, index) => {
+            let coords = { 
+                "EUROPA": [54, 15],
+                "ÁSIA": [30, 90],
+                "ÁFRICA": [0, 20],
+                "AMÉRICA INDÍGENA": [0, -60],
+                "ORIENTE MÉDIO": [25, 45],
+                "OCEANIA": [-15, 140]
+            }[group[0]] || [0,0];
+
+            L.circle(coords, {
+                color: colors[index % colors.length],
+                fillColor: colors[index % colors.length],
+                fillOpacity: 0.4,
+                radius: group[1] * 10000
+            }).addTo(map).bindPopup(group[0] + ": " + group[1] + "%");
+        });
+
+        // Focar etnia específica ao clicar no card
+        function focusEtnia(lat, lon, label) {
+            map.setView([parseFloat(lat), parseFloat(lon)], 5);
+            L.marker([parseFloat(lat), parseFloat(lon)]).addTo(map).bindPopup(label).openPopup();
+        }
+
+        // Expandir ou recolher os detalhes do card
+        function toggleDetails(macro) {
+            var details = document.getElementById("details-" + macro);
+            details.style.display = (details.style.display === "block") ? "none" : "block";
+        }
+    </script>
 </body>
 </html>
