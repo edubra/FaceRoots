@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>FaceRoots - Descubra suas raízes!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -14,16 +15,21 @@
         h1 {
             color: #4a643d;
             margin-top: 20px;
+            font-size: 2.2rem;
+        }
+        p {
+            font-size: 1.2rem;
+            color: #333;
         }
         .icon-container {
             display: flex;
             justify-content: center;
-            gap: 30px;
+            gap: 40px;
             margin-top: 40px;
         }
         .icon {
-            width: 100px;
-            height: 100px;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
             background: #4a643d;
             display: flex;
@@ -36,15 +42,16 @@
             background: #3a5230;
         }
         .icon img {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
         }
         .preview-container {
             margin-top: 30px;
             display: none;
         }
         .preview-container img {
-            width: 250px;
+            width: 300px;
+            max-width: 90%;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
         }
@@ -53,14 +60,17 @@
             display: flex;
             justify-content: center;
             gap: 15px;
+            flex-wrap: wrap;
         }
         .btn {
-            padding: 10px 20px;
+            padding: 14px 26px;
             background: #4a643d;
             color: white;
+            font-size: 1.1rem;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
+            min-width: 130px;
         }
         .btn:hover {
             background: #3a5230;
@@ -75,8 +85,8 @@
             border: 6px solid #f3f3f3;
             border-top: 6px solid #4a643d;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             animation: spin 1s linear infinite;
             margin: 0 auto;
         }
@@ -85,7 +95,7 @@
             100% { transform: rotate(360deg); }
         }
         #loader p {
-            font-size: 14px;
+            font-size: 16px;
             color: #4a643d;
             margin-top: 10px;
         }
@@ -93,12 +103,12 @@
         /* Frame da câmera centralizado */
         .camera-frame {
             position: relative;
-            width: 70vw;
-            max-width: 400px;
+            width: 80vw;
+            max-width: 450px;
             margin: 20px auto 0 auto;
             aspect-ratio: 9/16;
             display: none;
-            border-radius: 12px;
+            border-radius: 16px;
             overflow: hidden;
             background: black;
         }
@@ -113,13 +123,60 @@
             left: 0;
             width: 100%;
             height: 100%;
-            object-fit: contain; /* ✅ Mantém proporção da silhueta */
+            object-fit: contain;
             opacity: 0.6;
             pointer-events: none;
         }
         #capture-btn {
-            margin-top: 10px;
+            margin-top: 12px;
             display: none;
+        }
+
+        /* ✅ Responsividade */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+            p {
+                font-size: 1rem;
+            }
+            .icon {
+                width: 100px;
+                height: 100px;
+            }
+            .icon img {
+                width: 60px;
+                height: 60px;
+            }
+            .btn {
+                width: 90%;
+                font-size: 1rem;
+                padding: 12px 20px;
+            }
+            .preview-container img {
+                width: 85%;
+            }
+            .camera-frame {
+                width: 90vw;
+                max-width: 400px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.6rem;
+            }
+            .icon {
+                width: 90px;
+                height: 90px;
+            }
+            .icon img {
+                width: 50px;
+                height: 50px;
+            }
+            .btn {
+                font-size: 0.95rem;
+            }
         }
     </style>
 </head>
