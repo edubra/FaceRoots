@@ -101,14 +101,17 @@ def gerar_imagem_resultado(selfie_path, resultados):
     img_final.save(output_path)
     return output_path
 
+from uuid import uuid4
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
         file = request.files["file"]
         if file:
-            # ✅ Gera nome único
-            unique_name = f"{uuid.uuid4().hex}_{file.filename}"
-            path = os.path.join(UPLOAD_FOLDER, unique_name)
+            # ✅ Gera um nome único para evitar sobrescritas
+            ext = file.filename.rsplit(".", 1)[-1].lower()
+            unique_filename = f"{uuid4().hex}_{file.filename}"
+            path = os.path.join(UPLOAD_FOLDER, unique_filename)
             file.save(path)
 
             compactar_imagem(path)
@@ -126,7 +129,6 @@ def index():
             for label, sim in zip(labels, similarities):
                 group_scores.setdefault(label, []).append(sim)
             percentages = {g: round(np.mean(s) * 100, 1) for g, s in group_scores.items()}
-
             percentages = {g: v for g, v in percentages.items() if v >= 20}
 
             macro_groups = {
@@ -140,7 +142,6 @@ def index():
 
             grouped_scores = {}
             detailed_groups = {}
-
             for macro, keywords in macro_groups.items():
                 etnias_macro = {g: v for g, v in percentages.items() if any(g.startswith(k) for k in keywords)}
                 if etnias_macro:
@@ -168,15 +169,16 @@ def index():
             top3 = sorted(percentages.items(), key=lambda x: x[1], reverse=True)[:3]
             img_compartilhavel = gerar_imagem_resultado(path, top3)
 
+            # ✅ Retorna os caminhos já relativos à subrota
             return render_template(
                 "result.html",
-                image_path=f"uploads/{os.path.basename(path)}",
+                image_path=f"faceroots/static/uploads/{os.path.basename(path)}",
                 macro_sorted=macro_sorted,
                 detailed_groups=detailed_groups,
                 map_data=map_data,
                 miscigenacao=miscigenacao,
                 group_labels=group_labels,
-                img_compartilhavel=f"uploads/{os.path.basename(img_compartilhavel)}"
+                img_compartilhavel=f"faceroots/static/uploads/{os.path.basename(img_compartilhavel)}"
             )
 
     return render_template("index.html")
