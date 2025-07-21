@@ -186,9 +186,12 @@ def index():
             )
 
     return render_template("index.html")
+#debug
+app.config["DEBUG"] = True
+app.config["PROPAGATE_EXCEPTIONS"] = True
 
 # ✅ Carrega os encodings antes de qualquer worker iniciar
 load_or_create_encodings()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    app.run(host="0.0.0.0", port=8000, debug=True)
