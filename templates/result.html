@@ -17,15 +17,30 @@
             margin-top: 20px; 
         }
 
-        .miscigenacao-bar {
-            width: 80%;
-            max-width: 400px;
+        .miscigenacao-container {
+            width: 90%;
+            max-width: 800px;
             margin: 20px auto;
+            text-align: center;
+        }
+
+        .miscigenacao-titulo {
+            font-size: 1.8em;   /* ✅ maior para destaque */
+            color: #4a643d;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .miscigenacao-bar {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
             background: #ddd;
             border-radius: 20px;
             overflow: hidden;
             height: 25px;
         }
+
         .miscigenacao-fill {
             background: #4a643d;
             height: 100%;
@@ -34,7 +49,8 @@
             color: #fff;
             padding-right: 5px;
             line-height: 25px;
-            font-size: 14px;
+            font-size: 16px;
+            font-weight: bold;
             transition: width 1s ease-in-out;
         }
 
@@ -51,35 +67,50 @@
             background: #fff;
             border-radius: 10px;
             margin: 10px auto;
-            width: 90%;             /* ✅ mesma largura do mapa */
-            max-width: 800px;       /* ✅ mesma largura do mapa */
-            padding: 15px;          /* ✅ mais confortável */
+            width: 90%;
+            max-width: 800px;
+            padding: 15px;
             text-align: left;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             cursor: pointer;
         }
-        .card h3 {
+
+        .macro-grupo {
             margin: 0 0 5px 0;
             color: #4a643d;
-            font-size: 2rem;
+            font-size: 2em;
         }
+
         .card .details {
             display: none;
             margin-top: 10px;
-            font-size: 0.8rem;
-            color: #333;
         }
+
         .etnia {
             background: #f0f0f0;
-            margin: 5px 0;
-            padding: 5px;
+            margin: 8px 0;
+            padding: 8px;
             border-radius: 5px;
             cursor: pointer;
+        }
+
+        .etnia-nome {
+            font-size: 1.2em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .descricao-etnia {
+            font-size: 1em;
+            color: #555;
+            margin-top: 3px;
+            line-height: 1.4;
         }
 
         .share-buttons {
             margin: 20px;
         }
+
         .share-buttons a {
             display: inline-block;
             margin: 5px;
@@ -116,9 +147,9 @@
     <img src="{{ image_path }}" alt="Sua Foto" style="max-width:200px; border-radius:10px;">
 
     <!-- 2 - Barrinha de miscigenação -->
-    <div style="margin: 20px auto; width: 80%; text-align: center;">
-        <p><strong>Miscigenação:</strong> {{ miscigenacao }}%</p>
-        <div style="width: 100%; background: #ddd; border-radius: 8px; height: 20px; overflow: hidden;">
+    <div class="miscigenacao-container">
+        <p class="miscigenacao-titulo">Miscigenação: {{ miscigenacao }}%</p>
+        <div class="miscigenacao-bar">
             <div id="barra-miscigenacao"
                 style="height: 100%; width: {{ miscigenacao }}%;
                         background: linear-gradient(to right, 
@@ -136,12 +167,12 @@
     <!-- 4 - Cards -->
     {% for macro, score in macro_sorted %}
     <div class="card" onclick="toggleDetails('{{ macro }}')">
-        <h3>{{ macro }} - {{ score }}%</h3>
+        <h3 class="macro-grupo">{{ macro }} - {{ score }}%</h3>
         <div class="details" id="details-{{ macro }}">
             {% for etnia, etnia_score in detailed_groups[macro] %}
             <div class="etnia" onclick="focusEtnia('{{ group_labels[etnia]['lat'] }}', '{{ group_labels[etnia]['lon'] }}', '{{ group_labels[etnia]['label'] }}')">
-                {{ group_labels[etnia]['label'] }} - {{ etnia_score }}% <br>
-                <small>{{ group_labels[etnia]['desc'] }}</small>
+                <div class="etnia-nome">{{ group_labels[etnia]['label'] }} - {{ etnia_score }}%</div>
+                <div class="descricao-etnia">{{ group_labels[etnia]['desc'] }}</div>
             </div>
             {% endfor %}
         </div>
@@ -163,13 +194,11 @@
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        // --- MAPA ---
         var map = L.map('map').setView([20,0], 2);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
-        // Círculos dos macro-grupos
         var macroGroups = {{ macro_sorted|tojson }};
         var colors = ['red','blue','green','orange','purple','brown'];
         macroGroups.forEach((group, index) => {
@@ -190,13 +219,11 @@
             }).addTo(map).bindPopup(group[0] + ": " + group[1] + "%");
         });
 
-        // Focar etnia específica ao clicar no card
         function focusEtnia(lat, lon, label) {
             map.setView([parseFloat(lat), parseFloat(lon)], 5);
             L.marker([parseFloat(lat), parseFloat(lon)]).addTo(map).bindPopup(label).openPopup();
         }
 
-        // Expandir ou recolher os detalhes do card
         function toggleDetails(macro) {
             var details = document.getElementById("details-" + macro);
             details.style.display = (details.style.display === "block") ? "none" : "block";
