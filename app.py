@@ -19,24 +19,19 @@ UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
 # ✅ Garante que a pasta de uploads existe
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-app = Flask(__name__)
-
-# ✅ Ajuste para funcionar em subrota (/faceroots)
-from flask import request
+# ✅ Ajustado para funcionar em subrota (/faceroots)
+app = Flask(__name__, static_url_path="/faceroots/static", static_folder="static")
 
 @app.before_request
 def before_request():
-    # Força o script_root para funcionar em subrotas
     if request.script_root == "":
         request.script_root = "/faceroots"
 
 encodings = []
 labels = []
 
-
 def load_or_create_encodings():
     global encodings, labels
-
     if os.path.exists(ENCODINGS_FILE):
         print("🔄 Carregando encodings do arquivo...")
         with open(ENCODINGS_FILE, "rb") as f:
@@ -65,27 +60,20 @@ def load_or_create_encodings():
         pickle.dump({"encodings": encodings, "labels": labels}, f)
     print(f"✅ Encodings salvos ({len(encodings)} rostos).")
 
-
-# ✅ Função para compactar imagem antes de processar
 def compactar_imagem(input_path, max_size=800):
     img = Image.open(input_path).convert("RGB")
-
     if img.width > max_size:
         ratio = max_size / float(img.width)
         new_height = int(float(img.height) * ratio)
         img = img.resize((max_size, new_height), Image.LANCZOS)
-
     img.save(input_path, optimize=True, quality=85)
     return input_path
 
-
-# ✅ Cálculo da miscigenação corrigido
 def calcular_miscigenacao(macro_percent):
     total = sum(macro_percent.values()) or 1
     proporcoes = [v / total for v in macro_percent.values()]
     diversidade = 1 - sum([p ** 2 for p in proporcoes])  # Índice de Gini-Simpson
     return round(diversidade * 100, 1)
-
 
 def gerar_imagem_resultado(selfie_path, resultados):
     selfie = Image.open(selfie_path).convert("RGB").resize((250, 250))
@@ -114,7 +102,6 @@ def gerar_imagem_resultado(selfie_path, resultados):
     img_final.save(output_path)
     return output_path
 
-
 @app.route("/", methods=["GET", "POST"])
 def index():
     if request.method == "POST":
@@ -123,9 +110,7 @@ def index():
             path = os.path.join(UPLOAD_FOLDER, file.filename)
             file.save(path)
 
-            # ✅ Compacta automaticamente antes de processar
             compactar_imagem(path)
-
             img = face_recognition.load_image_file(path)
             face_locations = face_recognition.face_locations(img)
 
@@ -136,16 +121,13 @@ def index():
             distances = face_recognition.face_distance(encodings, img_enc)
             similarities = 1 - distances
 
-            # ✅ Percentuais médios por grupo
             group_scores = {}
             for label, sim in zip(labels, similarities):
                 group_scores.setdefault(label, []).append(sim)
             percentages = {g: round(np.mean(s) * 100, 1) for g, s in group_scores.items()}
 
-            # ✅ Filtrar etnias irrelevantes (<20%)
             percentages = {g: v for g, v in percentages.items() if v >= 20}
 
-            # ✅ Agrupamento por macro-região
             macro_groups = {
                 "EUROPA": ["european_"],
                 "ÁSIA": ["asian_"],
@@ -157,7 +139,6 @@ def index():
 
             grouped_scores = {}
             detailed_groups = {}
-
             for macro, keywords in macro_groups.items():
                 etnias_macro = {g: v for g, v in percentages.items() if any(g.startswith(k) for k in keywords)}
                 if etnias_macro:
@@ -168,10 +149,8 @@ def index():
             normalized_scores = {m: round((v / total_macro) * 100, 1) for m, v in grouped_scores.items()}
             macro_sorted = sorted(normalized_scores.items(), key=lambda x: x[1], reverse=True)
 
-            # ✅ Miscigenação com apenas grupos significativos (>5%)
             miscigenacao = calcular_miscigenacao({m: v for m, v in normalized_scores.items() if v >= 5})
 
-            # ✅ Dados do mapa
             map_data = []
             for macro, _ in macro_sorted:
                 for g, sc in detailed_groups.get(macro, []):
@@ -184,7 +163,6 @@ def index():
                         "score": sc
                     })
 
-            # ✅ Top3 para imagem compartilhável
             top3 = sorted(percentages.items(), key=lambda x: x[1], reverse=True)[:3]
             img_compartilhavel = gerar_imagem_resultado(path, top3)
 
@@ -200,7 +178,6 @@ def index():
             )
 
     return render_template("index.html")
-
 
 # ✅ Carrega os encodings antes de qualquer worker iniciar
 load_or_create_encodings()
