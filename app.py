@@ -1,10 +1,11 @@
-from flask import Flask, request, render_template, url_for
+from flask import Flask, request, render_template
 import os
 import sys
 import face_recognition
 import numpy as np
 import pickle
 import uuid
+import time
 from PIL import Image, ImageDraw, ImageFont
 from group_labels import group_labels
 
@@ -26,6 +27,15 @@ app.config["APPLICATION_ROOT"] = "/faceroots"
 
 encodings = []
 labels = []
+
+def limpar_uploads_antigos(max_age_seconds=3600):
+    """Remove arquivos mais antigos que 1 hora para evitar acúmulo e risco de visualização cruzada"""
+    agora = time.time()
+    for arquivo in os.listdir(UPLOAD_FOLDER):
+        caminho = os.path.join(UPLOAD_FOLDER, arquivo)
+        if os.path.isfile(caminho):
+            if agora - os.path.getmtime(caminho) > max_age_seconds:
+                os.remove(caminho)
 
 def load_or_create_encodings():
     global encodings, labels
@@ -101,16 +111,15 @@ def gerar_imagem_resultado(selfie_path, resultados):
     img_final.save(output_path)
     return output_path
 
-from uuid import uuid4
-
 @app.route("/", methods=["GET", "POST"])
 def index():
+    limpar_uploads_antigos()
+
     if request.method == "POST":
         file = request.files["file"]
         if file:
-            # ✅ Gera um nome único para evitar sobrescritas
             ext = file.filename.rsplit(".", 1)[-1].lower()
-            unique_filename = f"{uuid4().hex}_{file.filename}"
+            unique_filename = f"{uuid.uuid4().hex}_{file.filename}"
             path = os.path.join(UPLOAD_FOLDER, unique_filename)
             file.save(path)
 
@@ -169,7 +178,6 @@ def index():
             top3 = sorted(percentages.items(), key=lambda x: x[1], reverse=True)[:3]
             img_compartilhavel = gerar_imagem_resultado(path, top3)
 
-            # ✅ Retorna os caminhos já relativos à subrota
             return render_template(
                 "result.html",
                 image_path=f"faceroots/static/uploads/{os.path.basename(path)}",
