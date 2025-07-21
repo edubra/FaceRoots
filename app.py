@@ -180,14 +180,15 @@ def index():
 
             return render_template(
                 "result.html",
-                image_path=f"faceroots/static/uploads/{os.path.basename(path)}",
+                image_path=os.path.basename(path),
                 macro_sorted=macro_sorted,
                 detailed_groups=detailed_groups,
                 map_data=map_data,
                 miscigenacao=miscigenacao,
                 group_labels=group_labels,
-                img_compartilhavel=f"faceroots/static/uploads/{os.path.basename(img_compartilhavel)}"
-            )
+                img_compartilhavel=os.path.basename(img_compartilhavel)
+                )
+
 
     return render_template("index.html")
 
