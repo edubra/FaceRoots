@@ -144,7 +144,7 @@
     <h1>Resultado do FaceRoots</h1>
 
     <!-- ✅ 1 - Foto enviada pelo usuário -->
-    <img src="{{ url_for('static', filename='uploads/' + image_path) }}" 
+    <img src="{{ url_for('static', filename='uploads/' + image_path) }}" alt="Sua Foto" style="max-width:200px; border-radius:10px;">
          alt="Sua Foto" 
          style="max-width:200px; border-radius:10px;">
 
@@ -182,10 +182,10 @@
 
     <!-- ✅ 5 - Botões de compartilhamento -->
     <div class="share-buttons">
-        <a href="https://api.whatsapp.com/send?text=Olha%20meu%20resultado%20no%20FaceRoots!%20{{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank">WhatsApp</a>
-        <a href="https://t.me/share/url?url={{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank">Telegram</a>
-        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank">Facebook</a>
-    </div>
+    <a href="https://api.whatsapp.com/send?text=Olha%20meu%20resultado%20no%20FaceRoots!%20{{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank">WhatsApp</a>
+    <a href="https://t.me/share/url?url={{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank">Telegram</a>
+    <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank">Facebook</a>
+</div>
 
     <!-- ✅ 6 - Imagem compartilhável -->
     <img src="{{ url_for('static', filename='uploads/' + img_compartilhavel) }}" class="resultado-img">
