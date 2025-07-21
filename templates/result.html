@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>FaceRoots - Resultado</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -15,6 +17,50 @@
         h1 { 
             color: #3c4d35; 
             margin-top: 20px; 
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            margin: 10px auto;
+            width: 90%;
+            max-width: 800px;
+            padding: 15px;
+            text-align: left;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: pointer;
+        }
+
+        .macro-grupo {
+            margin: 0 0 5px 0;
+            color: #4a643d;
+            font-size: 2em;
+        }
+
+        .card .details {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .etnia {
+            background: #f0f0f0;
+            margin: 8px 0;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .etnia-nome {
+            font-size: 1.2em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .descricao-etnia {
+            font-size: 1em;
+            color: #555;
+            margin-top: 3px;
+            line-height: 1.4;
         }
 
         .miscigenacao-container {
@@ -63,63 +109,38 @@
             border: 2px solid #ccc;
         }
 
-        .card {
-            background: #fff;
-            border-radius: 10px;
-            margin: 10px auto;
-            width: 90%;
-            max-width: 800px;
-            padding: 15px;
-            text-align: left;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            cursor: pointer;
-        }
-
-        .macro-grupo {
-            margin: 0 0 5px 0;
-            color: #4a643d;
-            font-size: 2em;
-        }
-
-        .card .details {
-            display: none;
-            margin-top: 10px;
-        }
-
-        .etnia {
-            background: #f0f0f0;
-            margin: 8px 0;
-            padding: 8px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .etnia-nome {
-            font-size: 1.2em;
-            color: #333;
-            font-weight: bold;
-        }
-
-        .descricao-etnia {
-            font-size: 1em;
-            color: #555;
-            margin-top: 3px;
-            line-height: 1.4;
-        }
-
         .share-buttons {
             margin: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }
 
-        .share-buttons a {
-            display: inline-block;
-            margin: 5px;
-            padding: 10px 15px;
-            border-radius: 5px;
-            background: #4a643d;
+        .btn-share {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             color: #fff;
+            font-size: 24px;
             text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
+        .btn-share:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .instagram { background: radial-gradient(circle at 30% 30%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
+        .tiktok { background: linear-gradient(45deg, #69C9D0 0%, #EE1D52 50%, #000000 100%); }
+        .whatsapp { background-color: #25d366; }
+        .facebook { background-color: #1877f2; }
+        .twitter { background-color: #000000; }
+        .telegram { background-color: #0088cc; }
 
         .resultado-img {
             max-width: 300px;
@@ -143,29 +164,24 @@
 <body>
     <h1>Resultado do FaceRoots</h1>
 
-    <!-- ✅ 1 - Foto enviada pelo usuário -->
+    <!-- ✅ 1 - FOTO DA PESSOA -->
     <img src="{{ url_for('static', filename='uploads/' + image_path) }}" 
-     alt="Sua Foto" 
-     style="max-width:200px; border-radius:10px;">
+         alt="Sua Foto" 
+         style="max-width:200px; border-radius:10px;">
 
-    <!-- ✅ 2 - Barrinha de miscigenação -->
-    <div class="miscigenacao-container">
-        <p class="miscigenacao-titulo">Miscigenação: {{ miscigenacao }}%</p>
-        <div class="miscigenacao-bar">
-            <div id="barra-miscigenacao"
-                style="height: 100%; width: {{ miscigenacao }}%;
-                        background: linear-gradient(to right, 
-                            rgba(0,128,255,1) 0%, 
-                            rgba(0,255,0,1) 50%, 
-                            rgba(255,165,0,1) 100%);">
+    <!-- ✅ 2 - NOVO CARD: MAIOR SEMELHANÇA -->
+    {% set maior_etnia, maior_porcentagem = top3[0] %}
+    <div class="card" style="cursor: default;">
+        <h3 class="macro-grupo">Sua maior semelhança é com:</h3>
+        <div class="details" style="display:block;">
+            <div class="etnia">
+                <div class="etnia-nome">{{ group_labels[maior_etnia]['label'] }} - {{ maior_porcentagem }}%</div>
+                <div class="descricao-etnia">{{ group_labels[maior_etnia]['desc'] }}</div>
             </div>
         </div>
     </div>
 
-    <!-- ✅ 3 - Mapa -->
-    <div id="map"></div>
-
-    <!-- ✅ 4 - Cards com detalhes -->
+    <!-- ✅ 3 - CARDS ANTIGOS -->
     {% for macro, score in macro_sorted %}
     <div class="card" onclick="toggleDetails('{{ macro }}')">
         <h3 class="macro-grupo">{{ macro }} - {{ score }}%</h3>
@@ -180,17 +196,37 @@
     </div>
     {% endfor %}
 
-    <!-- ✅ 5 - Botões de compartilhamento -->
-    <div class="share-buttons">
-    <a href="https://api.whatsapp.com/send?text=Olha%20meu%20resultado%20no%20FaceRoots!%20{{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank">WhatsApp</a>
-    <a href="https://t.me/share/url?url={{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank">Telegram</a>
-    <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank">Facebook</a>
-</div>
+    <!-- ✅ 4 - MAPA -->
+    <div id="map"></div>
 
-    <!-- ✅ 6 - Imagem compartilhável -->
+    <!-- ✅ 5 - MISCIGENAÇÃO -->
+    <div class="miscigenacao-container">
+        <p class="miscigenacao-titulo">Miscigenação: {{ miscigenacao }}%</p>
+        <div class="miscigenacao-bar">
+            <div id="barra-miscigenacao"
+                style="height: 100%; width: {{ miscigenacao }}%;
+                        background: linear-gradient(to right, 
+                            rgba(0,128,255,1) 0%, 
+                            rgba(0,255,0,1) 50%, 
+                            rgba(255,165,0,1) 100%);">
+            </div>
+        </div>
+    </div>
+
+    <!-- ✅ 6 - BOTÕES DE COMPARTILHAMENTO -->
+    <div class="share-buttons">
+        <a class="btn-share instagram" href="https://www.instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+        <a class="btn-share tiktok" href="https://www.tiktok.com/" target="_blank"><i class="fab fa-tiktok"></i></a>
+        <a class="btn-share whatsapp" href="https://api.whatsapp.com/send?text=Olha%20meu%20resultado%20no%20FaceRoots!%20{{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank"><i class="fab fa-whatsapp"></i></a>
+        <a class="btn-share facebook" href="https://www.facebook.com/sharer/sharer.php?u={{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank"><i class="fab fa-facebook-f"></i></a>
+        <a class="btn-share twitter" href="https://twitter.com/intent/tweet?text=Olha%20meu%20resultado%20no%20FaceRoots!&url={{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank"><i class="fab fa-x-twitter"></i></a>
+        <a class="btn-share telegram" href="https://t.me/share/url?url={{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank"><i class="fab fa-telegram-plane"></i></a>
+    </div>
+
+    <!-- ✅ 7 - IMAGEM DE COMPARTILHAMENTO -->
     <img src="{{ url_for('static', filename='uploads/' + img_compartilhavel) }}" class="resultado-img">
 
-    <!-- ✅ 7 - Botão refazer -->
+    <!-- ✅ 8 - BOTÃO REFAZER -->
     <a class="btn-refazer" href="/">Refazer o Teste</a>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
