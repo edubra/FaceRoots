@@ -29,14 +29,17 @@ encodings = []
 labels = []
 
 def limpar_uploads_antigos(max_age_seconds=3600):
+    """Remove arquivos mais antigos que 1 hora"""
     agora = time.time()
     for arquivo in os.listdir(UPLOAD_FOLDER):
         caminho = os.path.join(UPLOAD_FOLDER, arquivo)
-        if os.path.isfile(caminho) and agora - os.path.getmtime(caminho) > max_age_seconds:
-            os.remove(caminho)
+        if os.path.isfile(caminho):
+            if agora - os.path.getmtime(caminho) > max_age_seconds:
+                os.remove(caminho)
 
 def load_or_create_encodings():
     global encodings, labels
+
     if os.path.exists(ENCODINGS_FILE):
         print("🔄 Carregando encodings do arquivo...")
         with open(ENCODINGS_FILE, "rb") as f:
@@ -46,7 +49,7 @@ def load_or_create_encodings():
         print(f"✅ {len(encodings)} rostos carregados.")
         return
 
-    print("⏳ Criando encodings a partir do dataset (primeira vez)...")
+    print("⏳ Criando encodings a partir do dataset...")
     for folder in os.listdir(DATASET_DIR):
         folder_path = os.path.join(DATASET_DIR, folder)
         if os.path.isdir(folder_path):
@@ -54,22 +57,24 @@ def load_or_create_encodings():
             for img in os.listdir(folder_path):
                 if img.lower().endswith(("jpg", "jpeg", "png", "webp")):
                     img_path = os.path.join(folder_path, img)
-                    try:
-                        image = face_recognition.load_image_file(img_path)
-                        face_locations = face_recognition.face_locations(image)
-                        if face_locations:
-                            enc = face_recognition.face_encodings(image, face_locations)[0]
-                            encodings.append(enc)
-                            labels.append(folder)
-                    except Exception as e:
-                        print(f"⚠️ Erro ao processar {img_path}: {e}")
+                    image = face_recognition.load_image_file(img_path)
+                    face_locations = face_recognition.face_locations(image)
+                    if face_locations:
+                        enc = face_recognition.face_encodings(image, face_locations)[0]
+                        encodings.append(enc)
+                        labels.append(folder)
 
     with open(ENCODINGS_FILE, "wb") as f:
         pickle.dump({"encodings": encodings, "labels": labels}, f)
     print(f"✅ Encodings salvos ({len(encodings)} rostos).")
 
 def compactar_imagem(input_path, max_size=800):
-    img = Image.open(input_path).convert("RGB")
+    try:
+        img = Image.open(input_path).convert("RGB")
+    except UnidentifiedImageError:
+        os.remove(input_path)
+        raise ValueError("Arquivo enviado não é uma imagem válida.")
+
     if img.width > max_size:
         ratio = max_size / float(img.width)
         new_height = int(float(img.height) * ratio)
@@ -109,42 +114,29 @@ def gerar_imagem_resultado(selfie_path, resultados):
     unique_result_name = f"{uuid.uuid4().hex}_resultado.png"
     output_path = os.path.join(UPLOAD_FOLDER, unique_result_name)
     img_final.save(output_path)
-    return output_path
+    return unique_result_name
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     limpar_uploads_antigos()
 
     if request.method == "POST":
-        file = request.files.get("file")
-        if not file or not file.filename:
-            return "Nenhum arquivo enviado."
+        file = request.files["file"]
+        if file and file.filename.lower().endswith(("jpg", "jpeg", "png", "webp")):
+            unique_filename = f"{uuid.uuid4().hex}_{file.filename}"
+            path = os.path.join(UPLOAD_FOLDER, unique_filename)
+            file.save(path)
 
-        ext = file.filename.rsplit(".", 1)[-1].lower()
-        if ext not in ["jpg", "jpeg", "png", "webp"]:
-            return "Formato de imagem não suportado."
+            try:
+                compactar_imagem(path)
+            except ValueError as e:
+                return str(e)
 
-        unique_filename = f"{uuid.uuid4().hex}_{file.filename}"
-        path = os.path.join(UPLOAD_FOLDER, unique_filename)
-        file.save(path)
-
-        # ✅ Verificação segura antes de processar
-        try:
-            with Image.open(path) as test_img:
-                test_img.verify()
-        except UnidentifiedImageError:
-            os.remove(path)
-            return "Arquivo enviado não é uma imagem válida."
-        except Exception as e:
-            os.remove(path)
-            return f"Erro ao processar a imagem: {e}"
-
-        try:
-            compactar_imagem(path)
             img = face_recognition.load_image_file(path)
             face_locations = face_recognition.face_locations(img)
 
             if not face_locations:
+                os.remove(path)
                 return "Nenhum rosto detectado. Tente outra foto."
 
             img_enc = face_recognition.face_encodings(img, face_locations)[0]
@@ -180,18 +172,6 @@ def index():
 
             miscigenacao = calcular_miscigenacao({m: v for m, v in normalized_scores.items() if v >= 5})
 
-            map_data = []
-            for macro, _ in macro_sorted:
-                for g, sc in detailed_groups.get(macro, []):
-                    info = group_labels.get(g, {"label": g, "desc": "", "coords": [0, 0]})
-                    map_data.append({
-                        "label": info["label"],
-                        "desc": info["desc"],
-                        "lat": info["coords"][0],
-                        "lon": info["coords"][1],
-                        "score": sc
-                    })
-
             top3 = sorted(percentages.items(), key=lambda x: x[1], reverse=True)[:3]
             img_compartilhavel = gerar_imagem_resultado(path, top3)
 
@@ -200,17 +180,14 @@ def index():
                 image_path=os.path.basename(path),
                 macro_sorted=macro_sorted,
                 detailed_groups=detailed_groups,
-                map_data=map_data,
                 miscigenacao=miscigenacao,
                 group_labels=group_labels,
-                img_compartilhavel=os.path.basename(img_compartilhavel)
+                img_compartilhavel=img_compartilhavel
             )
-
-        except Exception as e:
-            return f"Ocorreu um erro inesperado: {e}"
 
     return render_template("index.html")
 
+# ✅ Carrega os encodings antes de qualquer worker iniciar
 load_or_create_encodings()
 
 if __name__ == "__main__":
