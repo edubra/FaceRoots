@@ -21,6 +21,15 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app = Flask(__name__)
 
+# ✅ Ajuste para funcionar em subrota (/faceroots)
+from flask import request
+
+@app.before_request
+def before_request():
+    # Força o script_root para funcionar em subrotas
+    if request.script_root == "":
+        request.script_root = "/faceroots"
+
 encodings = []
 labels = []
 
@@ -197,4 +206,4 @@ def index():
 load_or_create_encodings()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=True)
+    app.run(host="0.0.0.0", port=8000)
