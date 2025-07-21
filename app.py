@@ -1,9 +1,10 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, url_for
 import os
 import sys
 import face_recognition
 import numpy as np
 import pickle
+import uuid
 from PIL import Image, ImageDraw, ImageFont
 from group_labels import group_labels
 
@@ -59,19 +60,17 @@ def load_or_create_encodings():
 
 def compactar_imagem(input_path, max_size=800):
     img = Image.open(input_path).convert("RGB")
-
     if img.width > max_size:
         ratio = max_size / float(img.width)
         new_height = int(float(img.height) * ratio)
         img = img.resize((max_size, new_height), Image.LANCZOS)
-
     img.save(input_path, optimize=True, quality=85)
     return input_path
 
 def calcular_miscigenacao(macro_percent):
     total = sum(macro_percent.values()) or 1
     proporcoes = [v / total for v in macro_percent.values()]
-    diversidade = 1 - sum([p ** 2 for p in proporcoes])  # Índice de Gini-Simpson
+    diversidade = 1 - sum([p ** 2 for p in proporcoes])
     return round(diversidade * 100, 1)
 
 def gerar_imagem_resultado(selfie_path, resultados):
@@ -97,7 +96,8 @@ def gerar_imagem_resultado(selfie_path, resultados):
         draw.text((300, y_text), f"{label}: {score}%", fill=(74, 100, 61), font=font_texto)
         y_text += 40
 
-    output_path = os.path.join(UPLOAD_FOLDER, "resultado_compartilhavel.png")
+    unique_result_name = f"{uuid.uuid4().hex}_resultado.png"
+    output_path = os.path.join(UPLOAD_FOLDER, unique_result_name)
     img_final.save(output_path)
     return output_path
 
@@ -106,7 +106,9 @@ def index():
     if request.method == "POST":
         file = request.files["file"]
         if file:
-            path = os.path.join(UPLOAD_FOLDER, file.filename)
+            # ✅ Gera nome único
+            unique_name = f"{uuid.uuid4().hex}_{file.filename}"
+            path = os.path.join(UPLOAD_FOLDER, unique_name)
             file.save(path)
 
             compactar_imagem(path)
@@ -168,13 +170,13 @@ def index():
 
             return render_template(
                 "result.html",
-                image_path=f"static/uploads/{os.path.basename(path)}",
+                image_path=f"uploads/{os.path.basename(path)}",
                 macro_sorted=macro_sorted,
                 detailed_groups=detailed_groups,
                 map_data=map_data,
                 miscigenacao=miscigenacao,
                 group_labels=group_labels,
-                img_compartilhavel=f"static/uploads/{os.path.basename(img_compartilhavel)}"
+                img_compartilhavel=f"uploads/{os.path.basename(img_compartilhavel)}"
             )
 
     return render_template("index.html")
