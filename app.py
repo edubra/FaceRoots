@@ -21,17 +21,14 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # ✅ Ajustado para funcionar em subrota (/faceroots)
 app = Flask(__name__, static_url_path="/faceroots/static", static_folder="static")
-
-@app.before_request
-def before_request():
-    if request.script_root == "":
-        request.script_root = "/faceroots"
+app.config["APPLICATION_ROOT"] = "/faceroots"
 
 encodings = []
 labels = []
 
 def load_or_create_encodings():
     global encodings, labels
+
     if os.path.exists(ENCODINGS_FILE):
         print("🔄 Carregando encodings do arquivo...")
         with open(ENCODINGS_FILE, "rb") as f:
@@ -62,10 +59,12 @@ def load_or_create_encodings():
 
 def compactar_imagem(input_path, max_size=800):
     img = Image.open(input_path).convert("RGB")
+
     if img.width > max_size:
         ratio = max_size / float(img.width)
         new_height = int(float(img.height) * ratio)
         img = img.resize((max_size, new_height), Image.LANCZOS)
+
     img.save(input_path, optimize=True, quality=85)
     return input_path
 
@@ -139,6 +138,7 @@ def index():
 
             grouped_scores = {}
             detailed_groups = {}
+
             for macro, keywords in macro_groups.items():
                 etnias_macro = {g: v for g, v in percentages.items() if any(g.startswith(k) for k in keywords)}
                 if etnias_macro:
