@@ -187,6 +187,7 @@ def index():
 
     return render_template("index.html")
 #debug
+app.debug = True
 app.config["DEBUG"] = True
 app.config["PROPAGATE_EXCEPTIONS"] = True
 
