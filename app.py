@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, url_for
 import os
 import sys
 import face_recognition
@@ -6,7 +6,7 @@ import numpy as np
 import pickle
 import uuid
 import time
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError
 from group_labels import group_labels
 
 # ✅ Diretório absoluto do projeto
@@ -28,14 +28,15 @@ app.config["APPLICATION_ROOT"] = "/faceroots"
 encodings = []
 labels = []
 
+
 def limpar_uploads_antigos(max_age_seconds=3600):
     """Remove arquivos mais antigos que 1 hora para evitar acúmulo e risco de visualização cruzada"""
     agora = time.time()
     for arquivo in os.listdir(UPLOAD_FOLDER):
         caminho = os.path.join(UPLOAD_FOLDER, arquivo)
-        if os.path.isfile(caminho):
-            if agora - os.path.getmtime(caminho) > max_age_seconds:
-                os.remove(caminho)
+        if os.path.isfile(caminho) and agora - os.path.getmtime(caminho) > max_age_seconds:
+            os.remove(caminho)
+
 
 def load_or_create_encodings():
     global encodings, labels
@@ -68,20 +69,33 @@ def load_or_create_encodings():
         pickle.dump({"encodings": encodings, "labels": labels}, f)
     print(f"✅ Encodings salvos ({len(encodings)} rostos).")
 
+
 def compactar_imagem(input_path, max_size=800):
-    img = Image.open(input_path).convert("RGB")
-    if img.width > max_size:
-        ratio = max_size / float(img.width)
-        new_height = int(float(img.height) * ratio)
-        img = img.resize((max_size, new_height), Image.LANCZOS)
-    img.save(input_path, optimize=True, quality=85)
-    return input_path
+    """Compacta e valida se a imagem é realmente uma imagem"""
+    try:
+        img = Image.open(input_path)
+        img.verify()  # ✅ Verifica se o arquivo é uma imagem válida
+        img = Image.open(input_path).convert("RGB")
+
+        if img.width > max_size:
+            ratio = max_size / float(img.width)
+            new_height = int(float(img.height) * ratio)
+            img = img.resize((max_size, new_height), Image.LANCZOS)
+
+        img.save(input_path, optimize=True, quality=85)
+        return True
+    except UnidentifiedImageError:
+        print(f"❌ Arquivo inválido ou corrompido: {input_path}")
+        os.remove(input_path)
+        return False
+
 
 def calcular_miscigenacao(macro_percent):
     total = sum(macro_percent.values()) or 1
     proporcoes = [v / total for v in macro_percent.values()]
     diversidade = 1 - sum([p ** 2 for p in proporcoes])
     return round(diversidade * 100, 1)
+
 
 def gerar_imagem_resultado(selfie_path, resultados):
     selfie = Image.open(selfie_path).convert("RGB").resize((250, 250))
@@ -109,7 +123,8 @@ def gerar_imagem_resultado(selfie_path, resultados):
     unique_result_name = f"{uuid.uuid4().hex}_resultado.png"
     output_path = os.path.join(UPLOAD_FOLDER, unique_result_name)
     img_final.save(output_path)
-    return output_path
+    return unique_result_name
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -123,11 +138,14 @@ def index():
             path = os.path.join(UPLOAD_FOLDER, unique_filename)
             file.save(path)
 
-            compactar_imagem(path)
+            if not compactar_imagem(path):
+                return "Arquivo inválido ou corrompido. Envie uma imagem JPG/PNG/WebP."
+
             img = face_recognition.load_image_file(path)
             face_locations = face_recognition.face_locations(img)
 
             if not face_locations:
+                os.remove(path)
                 return "Nenhum rosto detectado. Tente outra foto."
 
             img_enc = face_recognition.face_encodings(img, face_locations)[0]
@@ -163,34 +181,21 @@ def index():
 
             miscigenacao = calcular_miscigenacao({m: v for m, v in normalized_scores.items() if v >= 5})
 
-            map_data = []
-            for macro, _ in macro_sorted:
-                for g, sc in detailed_groups.get(macro, []):
-                    info = group_labels.get(g, {"label": g, "desc": "", "coords": [0, 0]})
-                    map_data.append({
-                        "label": info["label"],
-                        "desc": info["desc"],
-                        "lat": info["coords"][0],
-                        "lon": info["coords"][1],
-                        "score": sc
-                    })
-
             top3 = sorted(percentages.items(), key=lambda x: x[1], reverse=True)[:3]
             img_compartilhavel = gerar_imagem_resultado(path, top3)
 
             return render_template(
                 "result.html",
-                image_path=os.path.basename(path),
+                image_path=unique_filename,
                 macro_sorted=macro_sorted,
                 detailed_groups=detailed_groups,
-                map_data=map_data,
                 miscigenacao=miscigenacao,
                 group_labels=group_labels,
-                img_compartilhavel=os.path.basename(img_compartilhavel)
-                )
-
+                img_compartilhavel=img_compartilhavel
+            )
 
     return render_template("index.html")
+
 
 # ✅ Carrega os encodings antes de qualquer worker iniciar
 load_or_create_encodings()
