@@ -25,7 +25,7 @@
         }
 
         .miscigenacao-titulo {
-            font-size: 1.8em;   /* ✅ maior para destaque */
+            font-size: 1.8em;
             color: #4a643d;
             margin-bottom: 8px;
             font-weight: bold;
@@ -144,7 +144,9 @@
     <h1>Resultado do FaceRoots</h1>
 
     <!-- 1 - Foto -->
-    <img src="{{ image_path }}" alt="Sua Foto" style="max-width:200px; border-radius:10px;">
+    <img src="{{ url_for('static', filename=image_path.replace('static/', '')) }}" 
+         alt="Sua Foto" 
+         style="max-width:200px; border-radius:10px;">
 
     <!-- 2 - Barrinha de miscigenação -->
     <div class="miscigenacao-container">
@@ -181,13 +183,13 @@
 
     <!-- 5 - Botões de compartilhamento -->
     <div class="share-buttons">
-        <a href="https://api.whatsapp.com/send?text=Olha%20meu%20resultado%20no%20FaceRoots!%20{{ request.host_url }}{{ img_compartilhavel }}" target="_blank">WhatsApp</a>
-        <a href="https://t.me/share/url?url={{ request.host_url }}{{ img_compartilhavel }}" target="_blank">Telegram</a>
-        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.host_url }}{{ img_compartilhavel }}" target="_blank">Facebook</a>
+        <a href="https://api.whatsapp.com/send?text=Olha%20meu%20resultado%20no%20FaceRoots!%20{{ request.host_url }}{{ url_for('static', filename=img_compartilhavel.replace('static/', '')) }}" target="_blank">WhatsApp</a>
+        <a href="https://t.me/share/url?url={{ request.host_url }}{{ url_for('static', filename=img_compartilhavel.replace('static/', '')) }}" target="_blank">Telegram</a>
+        <a href="https://www.facebook.com/sharer/sharer.php?u={{ request.host_url }}{{ url_for('static', filename=img_compartilhavel.replace('static/', '')) }}" target="_blank">Facebook</a>
     </div>
 
     <!-- 6 - Imagem compartilhável -->
-    <img src="{{ img_compartilhavel }}" class="resultado-img">
+    <img src="{{ url_for('static', filename=img_compartilhavel.replace('static/', '')) }}" class="resultado-img">
 
     <!-- 7 - Botão refazer -->
     <a class="btn-refazer" href="/">Refazer o Teste</a>
