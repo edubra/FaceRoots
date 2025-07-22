@@ -8,7 +8,7 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            background-color: #f5f3eb;
+            background-color: #ffffff;
             margin: 0;
             padding: 0;
         }
@@ -17,44 +17,147 @@
             margin-top: 20px;
             font-size: 2.2rem;
         }
-        p {
+
+        /* ✅ Vídeo */
+        .video-container {
+            margin: 20px auto;
+            max-width: 1000px;
+            width: 90%;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .video-container video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* ✅ Logo */
+        .logo-container {
+            display: none;
+            margin: 20px auto;
+            max-width: 300px;
+            width: 60%;
+        }
+        .logo-container img {
+            width: 100%;
+            height: auto;
+        }
+
+        /* ✅ Texto */
+        .intro-text {
             font-size: 1.2rem;
             color: #333;
+            margin-top: 15px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
         }
-        .icon-container {
+
+        /* ✅ Botões principais */
+        .start-btn,
+        .btn-continue,
+        .btn-refazer {
             display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            text-decoration: none;
+            color: #555555;
+            font-size: 18px;
+            border-radius: 20px;
+            width: 200px;
+            height: 40px;
+            font-weight: bold;
+            border: 2px solid #555555;
+            transition: 0.3s;
+            box-shadow: 0px 6px 0px -2px rgba(67, 145, 209, 1);
+            background-color: #90caf9;
+            margin: 20px auto 0 auto;
+            cursor: pointer;
+        }
+        .start-btn:hover,
+        .btn-continue:hover,
+        .btn-refazer:hover {
+            box-shadow: 0 0 #fff;
+            transform: translateY(1px);
+        }
+
+        /* ✅ Botão "Usar outra foto" */
+        .btn-change {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            text-decoration: none;
+            color: #555555;
+            font-size: 18px;
+            border-radius: 20px;
+            width: 200px;
+            height: 40px;
+            font-weight: bold;
+            border: 2px solid #555555;
+            transition: 0.3s;
+            box-shadow: 0px 6px 0px -2px rgba(119, 84, 2, 1);
+            background-color: #ffb300;
+            cursor: pointer;
+            margin: 0 auto;
+        }
+        .btn-change:hover {
+            box-shadow: 0 0 #fff;
+            transform: translateY(1px);
+        }
+
+        /* ✅ Ícones de escolha */
+        .icon-container {
+            display: none;
             justify-content: center;
             gap: 40px;
-            margin-top: 40px;
+            margin-top: 30px;
         }
         .icon {
             width: 120px;
             height: 120px;
             border-radius: 50%;
-            background: #4a643d;
+            background: #f5f5f5;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: 0.3s;
-        }
-        .icon:hover {
-            background: #3a5230;
+            transition: 0.2s ease-in-out;
         }
         .icon img {
             width: 70px;
             height: 70px;
+            transition: 0.2s ease-in-out;
         }
+        .icon:hover {
+            background: #b4b4b4;
+        }
+        .icon:active {
+            transform: scale(0.85);
+        }
+
+        /* ✅ Preview */
         .preview-container {
             margin-top: 30px;
             display: none;
+            position: relative;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
         }
         .preview-container img {
-            width: 300px;
-            max-width: 90%;
+            width: 100%;
+            max-width: 300px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            transition: opacity 0.3s;
         }
+        .preview-container.loading img {
+            opacity: 0.5;
+        }
+
         .btns {
             margin-top: 20px;
             display: flex;
@@ -62,24 +165,16 @@
             gap: 15px;
             flex-wrap: wrap;
         }
-        .btn {
-            padding: 14px 26px;
-            background: #4a643d;
-            color: white;
-            font-size: 1.1rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            min-width: 130px;
-        }
-        .btn:hover {
-            background: #3a5230;
-        }
 
-        /* Loader */
+        /* ✅ Loader */
         #loader {
             display: none;
-            margin-top: 30px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
         }
         .spinner {
             border: 6px solid #f3f3f3;
@@ -98,9 +193,10 @@
             font-size: 16px;
             color: #4a643d;
             margin-top: 10px;
+            font-weight: bold;
         }
 
-        /* Frame da câmera centralizado */
+        /* ✅ Frame da câmera */
         .camera-frame {
             position: relative;
             width: 80vw;
@@ -127,103 +223,98 @@
             opacity: 0.6;
             pointer-events: none;
         }
-        #capture-btn {
-            margin-top: 12px;
+        .camera-actions {
             display: none;
+            margin-top: 15px;
+            text-align: center;
         }
 
-        /* ✅ Responsividade */
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 1.8rem;
-            }
-            p {
-                font-size: 1rem;
-            }
-            .icon {
-                width: 100px;
-                height: 100px;
-            }
-            .icon img {
-                width: 60px;
-                height: 60px;
-            }
-            .btn {
-                width: 90%;
-                font-size: 1rem;
-                padding: 12px 20px;
-            }
-            .preview-container img {
-                width: 85%;
-            }
-            .camera-frame {
-                width: 90vw;
-                max-width: 400px;
+        /* ✅ Powered */
+        .powered {
+            margin: 40px auto 20px auto;
+        }
+        .powered img {
+            width: 50%;
+            max-width: 200px;
+        }
+        @media (min-width: 992px) {
+            .powered img {
+                width: 25%;
             }
         }
 
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1.6rem;
-            }
-            .icon {
-                width: 90px;
-                height: 90px;
-            }
-            .icon img {
-                width: 50px;
-                height: 50px;
-            }
-            .btn {
-                font-size: 0.95rem;
-            }
-        }
     </style>
 </head>
 <body>
-    <h1>FaceRoots</h1>
-    <p>Escolha como deseja enviar sua foto:</p>
+    <div class="video-container" id="video-container">
+        <video autoplay loop muted playsinline>
+            <source src="/faceroots/static/faceroots.mp4" type="video/mp4">
+            Seu navegador não suporta vídeos.
+        </video>
+    </div>
 
-    <!-- Tela inicial com ícones -->
+    <div class="logo-container" id="logo-container">
+        <img src="/faceroots/static/facerootslogo.png" alt="FaceRoots Logo">
+    </div>
+
+    <p class="intro-text" id="intro-text">
+        Faça um teste rápido e descubra suas raízes!<br>
+        Compare seu rosto com mais de <strong>10.000 rostos</strong> de diferentes etnias.
+    </p>
+    <button class="start-btn" id="start-btn">COMEÇAR</button>
+
+    <p id="choose-text" style="display:none; font-size:1.2rem; color:#333; margin-top:25px;">
+        Escolha como você deseja enviar sua foto:
+    </p>
     <div class="icon-container" id="initial-options">
         <div class="icon" id="select-gallery">
-            <img src="https://img.icons8.com/ios-filled/100/ffffff/image.png" alt="Galeria">
+            <img src="/faceroots/static/gallery.png" alt="Galeria">
         </div>
         <div class="icon" id="open-camera">
-            <img src="https://img.icons8.com/ios-filled/100/ffffff/camera.png" alt="Câmera">
+            <img src="/faceroots/static/camera.png" alt="Câmera">
         </div>
     </div>
 
-    <!-- Preview da imagem escolhida -->
     <div class="preview-container" id="preview-container">
         <img id="preview-img" src="" alt="Preview">
+        <div id="loader">
+            <div class="spinner"></div>
+            <p>Analisando seu rosto, aguarde...</p>
+        </div>
         <div class="btns">
-            <button class="btn" id="change-photo">Usar outra foto</button>
-            <button class="btn" id="continue-btn">Continuar</button>
+            <button class="btn-change" id="change-photo">Usar outra foto</button>
+            <button class="btn-continue" id="continue-btn">Continuar</button>
         </div>
     </div>
 
-    <!-- Formulário oculto -->
     <form id="upload-form" method="POST" enctype="multipart/form-data" style="display:none;">
         <input type="file" name="file" id="file-input" accept="image/*">
     </form>
 
-    <!-- Câmera -->
     <div class="camera-frame" id="camera-frame">
         <video id="video" autoplay playsinline></video>
-        <img id="face-overlay" src="/static/face_overlay.png" alt="Overlay">
+        <img id="face-overlay" src="/faceroots/static/face_overlay.png" alt="Overlay">
     </div>
-    <button class="btn" id="capture-btn">Tirar Foto</button>
+    <div class="camera-actions" id="camera-actions">
+        <button class="btn-continue" id="capture-btn">Tirar Foto</button>
+    </div>
+
+    <!-- ✅ Powered -->
+    <div class="powered">
+        <a href="https://darwintest.me" target="_blank">
+            <img src="/faceroots/static/powered.png" alt="Powered by DarwinTest">
+        </a>
+    </div>
+
     <canvas id="canvas" style="display:none;"></canvas>
 
-    <!-- Loader -->
-    <div id="loader">
-        <div class="spinner"></div>
-        <p>Analisando seu rosto, aguarde...</p>
-    </div>
-
     <script>
+        const startBtn = document.getElementById("start-btn");
+        const introText = document.getElementById("intro-text");
+        const chooseText = document.getElementById("choose-text");
         const initialOptions = document.getElementById("initial-options");
+        const videoContainer = document.getElementById("video-container");
+        const logoContainer = document.getElementById("logo-container");
         const previewContainer = document.getElementById("preview-container");
         const previewImg = document.getElementById("preview-img");
         const changePhotoBtn = document.getElementById("change-photo");
@@ -231,64 +322,61 @@
         const fileInput = document.getElementById("file-input");
         const uploadForm = document.getElementById("upload-form");
         const loader = document.getElementById("loader");
-
         const selectGallery = document.getElementById("select-gallery");
         const openCamera = document.getElementById("open-camera");
-
         const video = document.getElementById("video");
         const canvas = document.getElementById("canvas");
         const ctx = canvas.getContext("2d");
         const cameraFrame = document.getElementById("camera-frame");
         const captureBtn = document.getElementById("capture-btn");
+        const cameraActions = document.getElementById("camera-actions");
         let stream;
 
-        // ✅ Galeria
-        selectGallery.addEventListener("click", () => fileInput.click());
+        startBtn.addEventListener("click", () => {
+            startBtn.style.display = "none";
+            introText.style.display = "none";
+            videoContainer.style.display = "none";
+            logoContainer.style.display = "block";
+            chooseText.style.display = "block";
+            initialOptions.style.display = "flex";
+        });
 
+        selectGallery.addEventListener("click", () => fileInput.click());
         fileInput.addEventListener("change", () => {
             const file = fileInput.files[0];
             if (file) {
                 previewImg.src = URL.createObjectURL(file);
                 initialOptions.style.display = "none";
+                chooseText.style.display = "none";
                 previewContainer.style.display = "block";
             }
         });
 
-        // ✅ Abrir câmera
         openCamera.addEventListener("click", async () => {
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 video.srcObject = stream;
-
                 initialOptions.style.display = "none";
+                chooseText.style.display = "none";
                 cameraFrame.style.display = "block";
-                captureBtn.style.display = "inline-block";
+                cameraActions.style.display = "block";
             } catch (err) {
                 alert("Erro ao acessar a câmera: " + err);
             }
         });
 
-        // ✅ Tirar foto
         captureBtn.addEventListener("click", () => {
             const videoRatio = video.videoWidth / video.videoHeight;
             const targetRatio = 9 / 16;
-
             let cropWidth = video.videoWidth;
             let cropHeight = video.videoHeight;
-
-            if (videoRatio > targetRatio) {
-                cropWidth = video.videoHeight * targetRatio;
-            } else {
-                cropHeight = video.videoWidth / targetRatio;
-            }
-
+            if (videoRatio > targetRatio) cropWidth = video.videoHeight * targetRatio;
+            else cropHeight = video.videoWidth / targetRatio;
             const offsetX = (video.videoWidth - cropWidth) / 2;
             const offsetY = (video.videoHeight - cropHeight) / 2;
-
             canvas.width = cropWidth;
             canvas.height = cropHeight;
             ctx.drawImage(video, offsetX, offsetY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-
             canvas.toBlob(blob => {
                 const file = new File([blob], "selfie.png", { type: "image/png" });
                 const dataTransfer = new DataTransfer();
@@ -296,22 +384,21 @@
                 fileInput.files = dataTransfer.files;
                 previewImg.src = URL.createObjectURL(blob);
                 previewContainer.style.display = "block";
-
                 cameraFrame.style.display = "none";
-                captureBtn.style.display = "none";
+                cameraActions.style.display = "none";
                 stream.getTracks().forEach(track => track.stop());
             });
         });
 
-        // ✅ Trocar foto
         changePhotoBtn.addEventListener("click", () => {
             previewContainer.style.display = "none";
+            chooseText.style.display = "block";
             initialOptions.style.display = "flex";
             fileInput.value = "";
         });
 
-        // ✅ Enviar
         continueBtn.addEventListener("click", () => {
+            previewContainer.classList.add("loading");
             loader.style.display = "block";
             uploadForm.submit();
         });
