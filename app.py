@@ -7,7 +7,7 @@ import pickle
 import uuid
 import time
 from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError
-import pillow_heif  # ✅ necessário para converter HEIC
+import pillow_heif  # ✅ necessário para abrir HEIC/HEIF corretamente
 from group_labels import group_labels
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -21,6 +21,9 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # ✅ Mantendo subrota /faceroots
 app = Flask(__name__, static_url_path="/faceroots/static", static_folder="static")
 app.config["APPLICATION_ROOT"] = "/faceroots"
+
+# ✅ Registro do opener HEIF (fundamental para evitar erros)
+pillow_heif.register_heif_opener()
 
 encodings, labels = [], []
 
@@ -62,29 +65,27 @@ def load_or_create_encodings():
 
 def compactar_imagem(input_path, max_size=1200):
     try:
-        # ✅ Converte HEIC automaticamente para JPEG
-        if input_path.lower().endswith(".heic"):
-            print(f"🔄 Convertendo HEIC para JPEG: {input_path}")
-            heif_file = pillow_heif.read_heif(input_path)
-            img = Image.frombytes(
-                heif_file.mode, heif_file.size, heif_file.data, "raw"
-            ).convert("RGB")
+        img = Image.open(input_path).convert("RGB")
+
+        # ✅ Converte HEIC/HEIF para JPG
+        if input_path.lower().endswith((".heic", ".heif")):
             new_path = input_path.rsplit(".", 1)[0] + ".jpg"
             img.save(new_path, "JPEG", quality=90)
             os.remove(input_path)
             input_path = new_path
 
-        img = Image.open(input_path).convert("RGB")
+        # ✅ Redimensiona se necessário
+        if img.width > max_size:
+            ratio = max_size / float(img.width)
+            new_height = int(float(img.height) * ratio)
+            img = img.resize((max_size, new_height), Image.LANCZOS)
+
+        img.save(input_path, optimize=True, quality=85)
+        return input_path
+
     except UnidentifiedImageError:
         os.remove(input_path)
         raise ValueError("Arquivo enviado não é uma imagem válida.")
-
-    if img.width > max_size:
-        ratio = max_size / float(img.width)
-        new_height = int(float(img.height) * ratio)
-        img = img.resize((max_size, new_height), Image.LANCZOS)
-    img.save(input_path, optimize=True, quality=85)
-    return input_path
 
 def calcular_miscigenacao(macro_percent):
     total = sum(macro_percent.values()) or 1
@@ -126,13 +127,14 @@ def index():
 
     if request.method == "POST":
         file = request.files["file"]
-        if file and file.filename.lower().endswith(("jpg", "jpeg", "png", "webp", "heic")):
+        if file and file.filename.lower().endswith(("jpg", "jpeg", "png", "webp", "heic", "heif")):
             unique_filename = f"{uuid.uuid4().hex}_{file.filename}"
             path = os.path.join(UPLOAD_FOLDER, unique_filename)
             file.save(path)
             print(f"✅ Foto recebida: {path}, tamanho: {os.path.getsize(path)/1024/1024:.2f} MB")
+
             try:
-                path = compactar_imagem(path)  # ✅ pode alterar o path se converter HEIC
+                path = compactar_imagem(path)  # ✅ Atualiza path se converter HEIC
             except ValueError as e:
                 return str(e)
 
