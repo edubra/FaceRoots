@@ -65,14 +65,13 @@ def load_or_create_encodings():
 
 def compactar_imagem(input_path, max_size=1200):
     try:
-        img = Image.open(input_path).convert("RGB")
-       
-        # ✅ Corrige automaticamente a rotação EXIF
+        # ✅ Abre a imagem e corrige automaticamente rotação EXIF
+        img = Image.open(input_path)
         img = ImageOps.exif_transpose(img).convert("RGB")
 
-        # ✅ Converte HEIC/HEIF para JPG
+        # ✅ Se for HEIC/HEIF, converte para JPG antes de qualquer coisa
         if input_path.lower().endswith((".heic", ".heif")):
-            new_path = input_path.rsplit(".", 1)[0] + ".jpg"
+            new_path = input_path.rsplit(".", 1)[0] + "_converted.jpg"
             img.save(new_path, "JPEG", quality=90)
             os.remove(input_path)
             input_path = new_path
@@ -84,11 +83,19 @@ def compactar_imagem(input_path, max_size=1200):
             img = img.resize((max_size, new_height), Image.LANCZOS)
 
         img.save(input_path, optimize=True, quality=85)
+        print(f"✅ Imagem final compactada: {input_path}, tamanho: {os.path.getsize(input_path)/1024/1024:.2f} MB")
         return input_path
 
     except UnidentifiedImageError:
-        os.remove(input_path)
+        if os.path.exists(input_path):
+            os.remove(input_path)
         raise ValueError("Arquivo enviado não é uma imagem válida.")
+
+    except Exception as e:
+        print(f"❌ Erro inesperado ao processar imagem: {e}")
+        if os.path.exists(input_path):
+            os.remove(input_path)
+        raise ValueError("Erro ao processar imagem.")
 
 def calcular_miscigenacao(macro_percent):
     total = sum(macro_percent.values()) or 1
