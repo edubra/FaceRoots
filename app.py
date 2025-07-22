@@ -6,7 +6,7 @@ import numpy as np
 import pickle
 import uuid
 import time
-from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError
+from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError, ImageOps
 import pillow_heif  # ✅ necessário para abrir HEIC/HEIF corretamente
 from group_labels import group_labels
 
@@ -66,6 +66,9 @@ def load_or_create_encodings():
 def compactar_imagem(input_path, max_size=1200):
     try:
         img = Image.open(input_path).convert("RGB")
+       
+        # ✅ Corrige automaticamente a rotação EXIF
+        img = ImageOps.exif_transpose(img).convert("RGB")
 
         # ✅ Converte HEIC/HEIF para JPG
         if input_path.lower().endswith((".heic", ".heif")):
@@ -74,7 +77,7 @@ def compactar_imagem(input_path, max_size=1200):
             os.remove(input_path)
             input_path = new_path
 
-        # ✅ Redimensiona se necessário
+        # ✅ Reduz tamanho para facilitar reconhecimento
         if img.width > max_size:
             ratio = max_size / float(img.width)
             new_height = int(float(img.height) * ratio)
