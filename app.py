@@ -7,6 +7,7 @@ import pickle
 import uuid
 import time
 from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError
+import pillow_heif  # ✅ necessário para converter HEIC
 from group_labels import group_labels
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -61,6 +62,18 @@ def load_or_create_encodings():
 
 def compactar_imagem(input_path, max_size=1200):
     try:
+        # ✅ Converte HEIC automaticamente para JPEG
+        if input_path.lower().endswith(".heic"):
+            print(f"🔄 Convertendo HEIC para JPEG: {input_path}")
+            heif_file = pillow_heif.read_heif(input_path)
+            img = Image.frombytes(
+                heif_file.mode, heif_file.size, heif_file.data, "raw"
+            ).convert("RGB")
+            new_path = input_path.rsplit(".", 1)[0] + ".jpg"
+            img.save(new_path, "JPEG", quality=90)
+            os.remove(input_path)
+            input_path = new_path
+
         img = Image.open(input_path).convert("RGB")
     except UnidentifiedImageError:
         os.remove(input_path)
@@ -113,13 +126,13 @@ def index():
 
     if request.method == "POST":
         file = request.files["file"]
-        if file and file.filename.lower().endswith(("jpg", "jpeg", "png", "webp")):
+        if file and file.filename.lower().endswith(("jpg", "jpeg", "png", "webp", "heic")):
             unique_filename = f"{uuid.uuid4().hex}_{file.filename}"
             path = os.path.join(UPLOAD_FOLDER, unique_filename)
             file.save(path)
             print(f"✅ Foto recebida: {path}, tamanho: {os.path.getsize(path)/1024/1024:.2f} MB")
             try:
-                compactar_imagem(path)
+                path = compactar_imagem(path)  # ✅ pode alterar o path se converter HEIC
             except ValueError as e:
                 return str(e)
 
@@ -166,7 +179,6 @@ def index():
 
             miscigenacao = calcular_miscigenacao({m: v for m, v in normalized_scores.items() if v >= 5})
 
-            # ✅ Calculando top3 e maior semelhança
             top3 = sorted(percentages.items(), key=lambda x: x[1], reverse=True)[:3]
             if top3:
                 maior_etnia, maior_porcentagem = top3[0]
@@ -194,4 +206,3 @@ load_or_create_encodings()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
-    
