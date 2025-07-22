@@ -59,7 +59,7 @@ def load_or_create_encodings():
         pickle.dump({"encodings": encodings, "labels": labels}, f)
     print(f"✅ Encodings salvos ({len(encodings)} rostos).")
 
-def compactar_imagem(input_path, max_size=800):
+def compactar_imagem(input_path, max_size=1200):
     try:
         img = Image.open(input_path).convert("RGB")
     except UnidentifiedImageError:
@@ -117,7 +117,7 @@ def index():
             unique_filename = f"{uuid.uuid4().hex}_{file.filename}"
             path = os.path.join(UPLOAD_FOLDER, unique_filename)
             file.save(path)
-
+            print(f"✅ Foto recebida: {path}, tamanho: {os.path.getsize(path)/1024/1024:.2f} MB")
             try:
                 compactar_imagem(path)
             except ValueError as e:
