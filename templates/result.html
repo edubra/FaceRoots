@@ -15,7 +15,7 @@
             padding: 0; 
         }
         h1 { 
-            color: #3c4d35; 
+            color: #000000; 
             margin-top: 20px; 
         }
 
@@ -33,8 +33,8 @@
 
         .macro-grupo {
             margin: 0 0 5px 0;
-            color: #4a643d;
-            font-size: 2em;
+            color: #000000;
+            font-size: 1.1em;
         }
 
         .card .details {
@@ -71,8 +71,8 @@
         }
 
         .miscigenacao-titulo {
-            font-size: 1.8em;
-            color: #4a643d;
+            font-size: 0.8em;
+            color: #000000;
             margin-bottom: 8px;
             font-weight: bold;
         }
@@ -109,23 +109,48 @@
             border: 2px solid #ccc;
         }
 
+        .localizacao-titulo {
+            width: 90%;
+            max-width: 800px;
+            margin: 50px auto  auto auto;
+            text-align: left;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: #555555;
+        }
+        
+        .semelhanca-titulo {
+            width: 90%;
+            max-width: 800px;
+            margin: 50px auto  auto auto;
+            text-align: left;
+            font-size: 0.8em;
+            font-weight: bold;
+            color: #555555;
+        }
+
+
+
+        /* ✅ Botões de compartilhamento ajustados */
         .share-buttons {
-            margin: 20px;
+            margin: 100px 100px auto;
+            margin-bottom: 100px;
             display: flex;
-            justify-content: center;
-            gap: 15px;
+            justify-content: space-between;
             flex-wrap: wrap;
+            width: 90%;
+            max-width: 800px;
         }
 
         .btn-share {
-            width: 50px;
-            height: 50px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #fff;
-            font-size: 24px;
+            font-size: 48px;
             text-decoration: none;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
@@ -150,14 +175,28 @@
             border-radius: 10px;
         }
 
+        /* ✅ Botão refazer igual ao de continuar */
         .btn-refazer {
-            display: inline-block;
-            margin-top: 15px;
-            background: #3c4d35;
-            color: #fff;
-            padding: 10px 20px;
-            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
             text-decoration: none;
+            color: #555555;
+            font-size: 18px;
+            border-radius: 20px;
+            width: 200px;
+            height: 40px;
+            font-weight: bold;
+            border: 2px solid #555555;
+            transition: 0.3s;
+            box-shadow: 0px 6px 0px -2px rgba(67, 145, 209, 1);
+            background-color: #90caf9;
+            margin: 25px auto;
+        }
+        .btn-refazer:hover {
+            box-shadow: 0 0 #fff;
+            transform: translateY(1px);
         }
     </style>
 </head>
@@ -169,17 +208,22 @@
          alt="Sua Foto" 
          style="max-width:200px; border-radius:10px;">
 
+    <!-- ✅ NOVO TEXTO: maior semelhança -->
+    <div class="semelhanca-titulo">Seu fenótipo predominante:</div>
+
     <!-- ✅ 2 - NOVO CARD: MAIOR SEMELHANÇA -->
     {% set maior_etnia, maior_porcentagem = top3[0] %}
     <div class="card" style="cursor: default;">
-        <h3 class="macro-grupo">Sua maior semelhança é com:</h3>
-        <div class="details" style="display:block;">
+            <div class="details" style="display:block;">
             <div class="etnia">
                 <div class="etnia-nome">{{ group_labels[maior_etnia]['label'] }} - {{ maior_porcentagem }}%</div>
                 <div class="descricao-etnia">{{ group_labels[maior_etnia]['desc'] }}</div>
             </div>
         </div>
     </div>
+
+    <!-- ✅ NOVO TEXTO: ONDE ESTÃO LOCALIZADOS -->
+    <div class="localizacao-titulo">Chance de haver esta Etnia em seu DNA:</div>
 
     <!-- ✅ 3 - CARDS ANTIGOS -->
     {% for macro, score in macro_sorted %}
@@ -224,10 +268,65 @@
     </div>
 
     <!-- ✅ 7 - IMAGEM DE COMPARTILHAMENTO -->
-    <img src="{{ url_for('static', filename='uploads/' + img_compartilhavel) }}" class="resultado-img">
+    <!-- <img src="{{ url_for('static', filename='uploads/' + img_compartilhavel) }}" class="resultado-img"> -->
 
     <!-- ✅ 8 - BOTÃO REFAZER -->
     <a class="btn-refazer" href="/">Refazer o Teste</a>
+
+        <!-- ✅ 9 - DISCLAIMER -->
+    <div class="card" style="font-size: 1rem; color:#555555; cursor:default; margin-top:40px;">
+        <div id="disclaimer-container" style="overflow:hidden; max-height:70px; transition:max-height 0.5s ease;">
+            <p>
+                O <strong>FaceRoots</strong> utiliza técnicas de <strong>Machine Learning</strong> e 
+                <strong>Visão Computacional</strong> para analisar imagens faciais e 
+                <strong>estimar o fenótipo predominante</strong> de um indivíduo com base em padrões visuais comparados 
+                a um banco de dados diversificado de rostos humanos. O sistema aplica modelos de 
+                <strong>Redes Neurais Convolucionais (CNNs)</strong>, treinadas com imagens rotuladas de diferentes 
+                grupos populacionais, para reconhecer traços faciais característicos e associá-los a 
+                <strong>categorias fenotípicas amplas</strong>.<br><br>
+
+                <span id="disclaimer-more">
+                    É importante ressaltar que:<br>
+                    - O resultado gerado é <strong>puramente estatístico</strong> e reflete apenas 
+                    <strong>padrões visuais probabilísticos</strong>, não representando de forma exata ou definitiva 
+                    a origem genética do usuário.<br>
+                    - Fenótipo não é sinônimo de <strong>ancestralidade genética</strong>. Diversos fatores, como 
+                    mistura populacional, expressão genética individual e até condições ambientais, influenciam 
+                    a aparência.<br>
+                    - O FaceRoots <strong>não armazena imagens permanentemente</strong>, e os dados processados seguem 
+                    padrões básicos de privacidade, sendo utilizados apenas para gerar o resultado imediato.<br>
+                    - Este aplicativo deve ser utilizado <strong>exclusivamente para entretenimento e curiosidade pessoal</strong>, 
+                    <strong>não</strong> servindo para fins médicos, científicos ou decisões de qualquer natureza sensível.<br><br>
+                    Para quem busca um <strong>resultado preciso sobre ancestralidade genética</strong>, recomendamos 
+                    realizar um <strong>teste de DNA com empresas especializadas</strong>, como o <strong>Genera</strong>, 
+                    que oferece análises detalhadas baseadas em marcadores genéticos.
+                </span>
+            </p>
+        </div>
+        <a href="#" id="disclaimer-toggle" 
+           style="color:#555555; text-decoration:underline; font-size:1.2rem; display:inline-block; margin-top:5px;">
+           Leia mais
+        </a>
+    </div>
+
+    <script>
+        const toggle = document.getElementById('disclaimer-toggle');
+        const container = document.getElementById('disclaimer-container');
+        let expanded = false;
+
+        toggle.addEventListener('click', function (e) {
+            e.preventDefault();
+            expanded = !expanded;
+            if (expanded) {
+                container.style.maxHeight = container.scrollHeight + "px";
+                toggle.textContent = "Mostrar menos";
+            } else {
+                container.style.maxHeight = "70px";
+                toggle.textContent = "Leia mais";
+            }
+        });
+    </script>
+
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
