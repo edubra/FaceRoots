@@ -10,7 +10,8 @@ from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError, ImageOps
 import pillow_heif  # ✅ necessário para abrir HEIC/HEIF corretamente
 from group_labels import group_labels
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# ✅ Força caminho absoluto do servidor
+BASE_DIR = "/var/www/faceroots"
 sys.path.append(BASE_DIR)
 
 ENCODINGS_FILE = os.path.join(BASE_DIR, "encodings.pickle")
@@ -21,6 +22,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app = Flask(__name__, static_url_path="/faceroots/static", static_folder="static")
 app.config["APPLICATION_ROOT"] = "/faceroots"
 
+# ✅ Registro do HEIC
 pillow_heif.register_heif_opener()
 
 encodings, labels = [], []
