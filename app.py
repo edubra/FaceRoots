@@ -10,19 +10,24 @@ from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError, ImageOps
 import pillow_heif  # ✅ necessário para abrir HEIC/HEIF corretamente
 from group_labels import group_labels
 
-# ✅ Força caminho absoluto do servidor
-BASE_DIR = "/var/www/faceroots"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(BASE_DIR)
 
 ENCODINGS_FILE = os.path.join(BASE_DIR, "encodings.pickle")
 DATASET_DIR = os.path.join(BASE_DIR, "data")
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
+
+# ✅ Detecta automaticamente ambiente (VPS ou Local)
+if os.path.exists("/var/www/faceroots"):
+    UPLOAD_FOLDER = "/var/www/faceroots/static/uploads"
+else:
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 app = Flask(__name__, static_url_path="/faceroots/static", static_folder="static")
 app.config["APPLICATION_ROOT"] = "/faceroots"
 
-# ✅ Registro do HEIC
+# ✅ Registro do opener HEIF (fundamental para abrir HEIC)
 pillow_heif.register_heif_opener()
 
 encodings, labels = [], []
@@ -74,6 +79,7 @@ def compactar_imagem(input_path, max_size=1200):
 
         img = ImageOps.exif_transpose(img).convert("RGB")
 
+        # ✅ Se for HEIC/HEIF, converte para JPG antes de qualquer coisa
         if input_path.lower().endswith((".heic", ".heif")):
             new_path = input_path.rsplit(".", 1)[0] + "_converted.jpg"
             img.save(new_path, "JPEG", quality=90)
@@ -81,6 +87,7 @@ def compactar_imagem(input_path, max_size=1200):
             os.remove(input_path)
             input_path = new_path
 
+        # ✅ Reduz tamanho para facilitar reconhecimento
         if img.width > max_size:
             ratio = max_size / float(img.width)
             new_height = int(float(img.height) * ratio)
