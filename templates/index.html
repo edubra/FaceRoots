@@ -199,10 +199,10 @@
         /* ✅ Frame da câmera */
         .camera-frame {
             position: relative;
-            width: 80vw;
-            max-width: 450px;
+            width: 60vw; /* Ajuste a largura da câmera */
+            max-width: 400px; /* Define a largura máxima */
             margin: 20px auto 0 auto;
-            aspect-ratio: 9/16;
+            aspect-ratio: 5/4; /* Proporção 5:4 para a exibição */
             display: none;
             border-radius: 16px;
             overflow: hidden;
@@ -227,6 +227,9 @@
             display: none;
             margin-top: 15px;
             text-align: center;
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
         }
 
         /* ✅ Powered */
