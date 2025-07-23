@@ -149,13 +149,12 @@
             margin-right: auto;
         }
         .preview-container img {
-           
             width: 100%;
             max-width: 300px;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
             transition: opacity 0.3s;
-            object-fit: contain; /* Mantém a proporção */
+            object-fit: contain;
         }
         .preview-container.loading img {
             opacity: 0.5;
@@ -202,10 +201,10 @@
         /* ✅ Frame da câmera */
         .camera-frame {
             position: relative;
-            width: 60vw; /* Ajuste a largura da câmera */
-            max-width: 400px; /* Define a largura máxima */
+            width: 60vw;
+            max-width: 400px;
             margin: 20px auto 0 auto;
-            aspect-ratio: 5/4; /* Proporção 5:4 para a exibição */
+            aspect-ratio: 5/4;
             display: none;
             border-radius: 16px;
             overflow: hidden;
@@ -230,17 +229,13 @@
             display: none;
             margin-top: 15px;
             text-align: center;
-            position: absolute;
-            bottom: 10px;
-            width: 100%;
         }
 
-        @media (min-width: 992px) {
-            .powered img {
-                width: 25%;
+        @media (max-width: 600px) {
+            .camera-frame {
+                width: 90vw;
             }
         }
-
     </style>
 </head>
 <body>
@@ -361,13 +356,20 @@
             const targetRatio = 9 / 16;
             let cropWidth = video.videoWidth;
             let cropHeight = video.videoHeight;
-            if (videoRatio > targetRatio) cropWidth = video.video.height * targetRatio;
-            else cropHeight = video.video.width / targetRatio;
+
+            if (videoRatio > targetRatio) {
+                cropWidth = video.videoHeight * targetRatio;
+            } else {
+                cropHeight = video.videoWidth / targetRatio;
+            }
+
             const offsetX = (video.videoWidth - cropWidth) / 2;
             const offsetY = (video.videoHeight - cropHeight) / 2;
+
             canvas.width = cropWidth;
             canvas.height = cropHeight;
             ctx.drawImage(video, offsetX, offsetY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+
             canvas.toBlob(blob => {
                 const file = new File([blob], "selfie.png", { type: "image/png" });
                 const dataTransfer = new DataTransfer();
