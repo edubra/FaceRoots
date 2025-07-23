@@ -34,7 +34,7 @@
 
         /* ✅ Logo */
         .logo-container {
-            display: none;
+            display: block;
             margin: 20px auto;
             max-width: 300px;
             width: 60%;
@@ -349,6 +349,7 @@
                 initialOptions.style.display = "none";
                 chooseText.style.display = "none";
                 previewContainer.style.display = "block";
+                logoContainer.style.display = "none"; // Esconde a logo
             }
         });
 
@@ -360,6 +361,7 @@
                 chooseText.style.display = "none";
                 cameraFrame.style.display = "block";
                 cameraActions.style.display = "block";
+                logoContainer.style.display = "none"; // Esconde a logo
             } catch (err) {
                 alert("Erro ao acessar a câmera: " + err);
             }
