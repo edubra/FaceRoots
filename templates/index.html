@@ -153,6 +153,7 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
             transition: opacity 0.3s;
+            object-fit: contain; /* Mantém a proporção */
         }
         .preview-container.loading img {
             opacity: 0.5;
@@ -302,7 +303,7 @@
         <button class="btn-continue" id="capture-btn">Tirar Foto</button>
     </div>
 
-    <!-- ✅ Powered blablabla-->
+    <!-- ✅ Powered -->
     <div class="powered">
         <a href="https://darwintest.me" target="_blank">
             <img src="/faceroots/static/powered.png" alt="Powered by DarwinTest">
@@ -373,8 +374,8 @@
             const targetRatio = 9 / 16;
             let cropWidth = video.videoWidth;
             let cropHeight = video.videoHeight;
-            if (videoRatio > targetRatio) cropWidth = video.videoHeight * targetRatio;
-            else cropHeight = video.videoWidth / targetRatio;
+            if (videoRatio > targetRatio) cropWidth = video.video.height * targetRatio;
+            else cropHeight = video.video.width / targetRatio;
             const offsetX = (video.videoWidth - cropWidth) / 2;
             const offsetY = (video.videoHeight - cropHeight) / 2;
             canvas.width = cropWidth;
