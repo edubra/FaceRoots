@@ -32,15 +32,15 @@
             display: block;
         }
 
-        /* ✅ Logo */
+        /* ✅ Logo superior */
         .logo-container {
             display: none;
-            margin: 10px auto;
-            max-width: 300px;
-            width: 60%;
+            margin: 5px auto 10px auto;
+            max-width: 150px;
         }
         .logo-container img {
-            width: 50%;
+            max-width: 100%;
+            max-height: 10vh;
             height: auto;
         }
 
@@ -138,34 +138,44 @@
             transform: scale(0.85);
         }
 
-        /* ✅ Preview */
+        /* ✅ Preview Responsivo */
         .preview-container {
-            max-height: 50vw;
-            margin-top: 15px;
             display: none;
             position: relative;
-            max-width: 300px;
-            margin-left: auto;
-            margin-right: auto;
+            max-width: 90vw;
+            max-height: 65vh;
+            margin: 10px auto;
+            text-align: center;
         }
         .preview-container img {
-            width: 100%;
-            max-width: 300px;
+            max-width: 100%;
+            max-height: 45vh;
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0,0,0,0.2);
-            transition: opacity 0.3s;
             object-fit: contain;
+            display: block;
+            margin: 0 auto;
         }
         .preview-container.loading img {
             opacity: 0.5;
         }
 
         .btns {
-            margin-top: 20px;
+            margin-top: 10px;
             display: flex;
             justify-content: center;
-            gap: 15px;
+            gap: 10px;
             flex-wrap: wrap;
+        }
+
+        /* ✅ Logo inferior fixa */
+        .bottom-logo {
+            margin: 20px auto;
+            max-width: 180px;
+        }
+        .bottom-logo img {
+            max-width: 100%;
+            height: auto;
         }
 
         /* ✅ Loader */
@@ -293,6 +303,11 @@
     </div>
 
     <canvas id="canvas" style="display:none;"></canvas>
+
+    <!-- ✅ LOGO SEMPRE VISÍVEL NO FINAL -->
+    <div class="bottom-logo">
+        <img src="/faceroots/static/powered.png" alt="Marca">
+    </div>
 
     <script>
         const startBtn = document.getElementById("start-btn");
