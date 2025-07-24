@@ -203,15 +203,78 @@
 <body>
     <h1>Resultado do FaceRoots</h1>
 
-    <!-- ✅ 1 - FOTO DA PESSOA -->
-    <img src="{{ url_for('static', filename='uploads/' + image_path) }}" 
-         alt="Sua Foto" 
-         style="max-width:200px; border-radius:10px;">
+    <!-- ✅ 2 - IMAGEM DE COMPARTILHAMENTO -->
+   <img src="{{ url_for('static', filename='uploads/' + img_compartilhavel) }}" class="resultado-img"> 
 
-    <!-- ✅ NOVO TEXTO: maior semelhança -->
+<!-- ✅ 3 - BOTÕES DE COMPARTILHAMENTO -->
+<div class="share-buttons">
+    <button class="btn-share instagram" onclick="shareToApp('instagram')"><i class="fab fa-instagram"></i></button>
+    <button class="btn-share whatsapp" onclick="shareToApp('whatsapp')"><i class="fab fa-whatsapp"></i></button>
+    <button class="btn-share facebook" onclick="shareToApp('facebook')"><i class="fab fa-facebook-f"></i></button>
+    <button class="btn-share twitter" onclick="shareToApp('twitter')"><i class="fab fa-x-twitter"></i></button>
+    <button class="btn-share telegram" onclick="shareToApp('telegram')"><i class="fab fa-telegram-plane"></i></button>
+    <button class="btn-share" style="background:#444;" onclick="downloadImage()"><i class="fa fa-download"></i></button>
+</div>
+
+<script>
+    const imageUrl = document.querySelector(".resultado-img").src;
+    const pageUrl = window.location.href;
+    const message = "Olha meu resultado no FaceRoots!";
+
+    async function shareToApp(app) {
+        if (navigator.canShare && navigator.canShare({ files: [] })) {
+            try {
+                const response = await fetch(imageUrl);
+                const blob = await response.blob();
+                const file = new File([blob], "resultado.jpg", { type: blob.type });
+
+                await navigator.share({
+                    files: [file],
+                    title: "Meu resultado FaceRoots",
+                    text: message
+                });
+            } catch (err) {
+                console.log("Compartilhamento cancelado ou não suportado", err);
+                fallbackShare(app);
+            }
+        } else {
+            fallbackShare(app);
+        }
+    }
+
+    function fallbackShare(app) {
+        const encodedText = encodeURIComponent(`${message} ${pageUrl}`);
+        const encodedUrl = encodeURIComponent(pageUrl);
+
+        const links = {
+            instagram: "instagram://story-camera",
+            whatsapp: `https://api.whatsapp.com/send?text=${encodedText}`,
+            facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+            twitter: `https://twitter.com/intent/tweet?text=${encodedText}`,
+            telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`
+        };
+
+        if (app === "instagram") {
+            alert("Abrindo câmera dos Stories. Selecione a imagem manualmente.");
+        }
+        window.open(links[app], "_blank");
+    }
+
+    function downloadImage() {
+        const link = document.createElement("a");
+        link.href = imageUrl;
+        link.download = "resultado.jpg";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+</script>
+
+
+    <!-- ✅ 4 NOVO TEXTO: maior semelhança -->
     <div class="semelhanca-titulo">Seu fenótipo predominante:</div>
 
-    <!-- ✅ 2 - NOVO CARD: MAIOR SEMELHANÇA -->
+    <!-- ✅ 5 - NOVO CARD: MAIOR SEMELHANÇA -->
     {% set maior_etnia, maior_porcentagem = top3[0] %}
     <div class="card" style="cursor: default;">
             <div class="details" style="display:block;">
@@ -222,10 +285,10 @@
         </div>
     </div>
 
-    <!-- ✅ NOVO TEXTO: ONDE ESTÃO LOCALIZADOS -->
+    <!-- ✅ 6 NOVO TEXTO: ONDE ESTÃO LOCALIZADOS -->
     <div class="localizacao-titulo">Chance de haver esta Etnia em seu DNA:</div>
 
-    <!-- ✅ 3 - CARDS ANTIGOS -->
+    <!-- ✅ 7 - CARDS ANTIGOS -->
     {% for macro, score in macro_sorted %}
     <div class="card" onclick="toggleDetails('{{ macro }}')">
         <h3 class="macro-grupo">{{ macro }} - {{ score }}%</h3>
@@ -240,10 +303,10 @@
     </div>
     {% endfor %}
 
-    <!-- ✅ 4 - MAPA -->
+    <!-- ✅ 8 - MAPA -->
     <div id="map"></div>
 
-    <!-- ✅ 5 - MISCIGENAÇÃO -->
+    <!-- ✅ 9 - MISCIGENAÇÃO -->
     <div class="miscigenacao-container">
         <p class="miscigenacao-titulo">Miscigenação: {{ miscigenacao }}%</p>
         <div class="miscigenacao-bar">
@@ -257,25 +320,12 @@
         </div>
     </div>
 
-    <!-- ✅ 6 - BOTÕES DE COMPARTILHAMENTO -->
-    <div class="share-buttons">
-        <a class="btn-share instagram" href="https://www.instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
-        <a class="btn-share tiktok" href="https://www.tiktok.com/" target="_blank"><i class="fab fa-tiktok"></i></a>
-        <a class="btn-share whatsapp" href="https://api.whatsapp.com/send?text=Olha%20meu%20resultado%20no%20FaceRoots!%20{{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank"><i class="fab fa-whatsapp"></i></a>
-        <a class="btn-share facebook" href="https://www.facebook.com/sharer/sharer.php?u={{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank"><i class="fab fa-facebook-f"></i></a>
-        <a class="btn-share twitter" href="https://twitter.com/intent/tweet?text=Olha%20meu%20resultado%20no%20FaceRoots!&url={{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank"><i class="fab fa-x-twitter"></i></a>
-        <a class="btn-share telegram" href="https://t.me/share/url?url={{ request.host_url }}faceroots/static/uploads/{{ img_compartilhavel }}" target="_blank"><i class="fab fa-telegram-plane"></i></a>
-    </div>
-
-    <!-- ✅ 7 - IMAGEM DE COMPARTILHAMENTO -->
-    <!-- <img src="{{ url_for('static', filename='uploads/' + img_compartilhavel) }}" class="resultado-img"> -->
-
-    <!-- ✅ 8 - BOTÃO REFAZER -->
+    <!-- ✅ 10 - BOTÃO REFAZER -->
     <a class="btn-refazer" href="/">Refazer o Teste</a>
 
-        <!-- ✅ 9 - DISCLAIMER -->
-    <div class="card" style="font-size: 1rem; color:#555555; cursor:default; margin-top:40px;">
-        <div id="disclaimer-container" style="overflow:hidden; max-height:70px; transition:max-height 0.5s ease;">
+        <!-- ✅ 11 - DISCLAIMER -->
+    <div class="card" style="font-size: 1rem; color:#000000; cursor:default; margin-top:40px;">
+        <div id="disclaimer-container" style="overflow:hidden; max-height:300px; transition:max-height 0.5s ease;">
             <p>
                 O <strong>FaceRoots</strong> utiliza técnicas de <strong>Machine Learning</strong> e 
                 <strong>Visão Computacional</strong> para analisar imagens faciais e 
