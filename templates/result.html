@@ -131,16 +131,16 @@
 
 
 
-        /* ✅ Botões de compartilhamento ajustados */
         .share-buttons {
-            margin: 100px 100px auto;
-            margin-bottom: 100px;
+            margin: 40px auto;
             display: flex;
-            justify-content: space-between;
+            justify-content: center; /* ✅ Centraliza */
+            gap: 20px; /* ✅ Espaçamento uniforme entre os botões */
             flex-wrap: wrap;
             width: 90%;
             max-width: 800px;
-        }
+}
+
 
         .btn-share {
             width: 100px;
@@ -242,23 +242,21 @@
         }
     }
 
-    function fallbackShare(app) {
-        const encodedText = encodeURIComponent(`${message} ${pageUrl}`);
-        const encodedUrl = encodeURIComponent(pageUrl);
+   // ✅ Fallback para navegadores sem Web Share API
+        function fallbackShare(app) {
+            const encodedText = encodeURIComponent(`${message} ${pageUrl}`);
+            const encodedUrl = encodeURIComponent(pageUrl);
 
-        const links = {
-            instagram: "instagram://story-camera",
-            whatsapp: `https://api.whatsapp.com/send?text=${encodedText}`,
-            facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-            twitter: `https://twitter.com/intent/tweet?text=${encodedText}`,
-            telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`
-        };
+            const links = {
+                instagram: `https://www.instagram.com/?url=${encodedUrl}`,
+                whatsapp: `https://api.whatsapp.com/send?text=${encodedText}`,
+                facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
+                twitter: `https://twitter.com/intent/tweet?text=${encodedText}`,
+                telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`
+            };
 
-        if (app === "instagram") {
-            alert("Abrindo câmera dos Stories. Selecione a imagem manualmente.");
+            window.open(links[app], "_blank");
         }
-        window.open(links[app], "_blank");
-    }
 
     function downloadImage() {
         const link = document.createElement("a");
