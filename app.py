@@ -130,60 +130,95 @@ def draw_text_with_outline(draw, text, position, font, fill, outline, outline_wi
     # Desenha o texto principal
     draw.text((x, y), text, font=font, fill=fill)
 
-
 def gerar_imagem_resultado(selfie_path, resultados):
-    print(f"🖼️ Gerando imagem com efeitos FaceRoots: {selfie_path}", flush=True)
+    print(f"🖼️ Gerando imagem 1080x1920 centralizada no rosto: {selfie_path}", flush=True)
 
     # 1) ABRE A IMAGEM E APLICA EFEITOS
-    selfie = Image.open(selfie_path).convert("RGB")
-    selfie = ImageEnhance.Color(selfie).enhance(0.01)  # menos saturação
-    selfie = selfie.filter(ImageFilter.GaussianBlur(radius=2))  # leve desfoque
-    draw = ImageDraw.Draw(selfie)
+    original = Image.open(selfie_path).convert("RGB")
+    original = ImageOps.exif_transpose(original)
+    original = ImageEnhance.Color(original).enhance(0.01)
+   
+    # 2) DETECTA ROSTO PARA CENTRALIZAR
+    img_array = np.array(original)
+    face_locations = face_recognition.face_locations(img_array)
 
-    # 2) DESENHA OS PONTOS FACIAIS (no tamanho original)
-    landmarks = face_recognition.face_landmarks(face_recognition.load_image_file(selfie_path))
-    for face in landmarks:
-        for part in ["left_eye", "right_eye", "nose_bridge", "nose_tip", "top_lip", "bottom_lip"]:
-            if part in face:
-                draw.line(face[part], fill=(0, 255, 0), width=3)
-
-    # 3) CORTA EM 9:16 A PARTIR DO CENTRO
-    w, h = selfie.size
-    target_ratio = 9 / 16
-    new_w, new_h = w, h
-    if (w / h) > target_ratio:
-        new_w = int(h * target_ratio)
+    if face_locations:
+        top, right, bottom, left = face_locations[0]
+        face_center_x = (left + right) // 2
+        face_center_y = (top + bottom) // 2
     else:
-        new_h = int(w / target_ratio)
-    left = (w - new_w) // 2
-    top = (h - new_h) // 2
-    right = left + new_w
-    bottom = top + new_h
-    selfie = selfie.crop((left, top, right, bottom))
+        print("⚠️ Nenhum rosto detectado na centralização. Usando corte central padrão.", flush=True)
+        face_center_x = original.width // 2
+        face_center_y = original.height // 2
+
+    # 3) CALCULA CORTE 9:16 EM TORNO DO ROSTO
+    target_w, target_h = 1080, 1920
+    selfie_ratio = original.width / original.height
+    target_ratio = target_w / target_h
+
+    if selfie_ratio > target_ratio:
+        new_height = original.height
+        new_width = int(new_height * target_ratio)
+    else:
+        new_width = original.width
+        new_height = int(new_width / target_ratio)
+
+    left = max(0, face_center_x - new_width // 2)
+    top = max(0, face_center_y - new_height // 2)
+    right = left + new_width
+    bottom = top + new_height
+
+    if right > original.width:
+        right = original.width
+        left = right - new_width
+    if bottom > original.height:
+        bottom = original.height
+        top = bottom - new_height
+
+    selfie = original.crop((int(left), int(top), int(right), int(bottom)))
+    selfie = selfie.resize((target_w, target_h), Image.LANCZOS)
+
     draw = ImageDraw.Draw(selfie)
 
-    # 4) CARREGA A LOGO
+    # 4) DESENHA OS PONTOS FACIAIS (na imagem já cortada e redimensionada)
+    landmarks = face_recognition.face_landmarks(img_array)
+    if landmarks:
+        scale_x = target_w / (right - left)
+        scale_y = target_h / (bottom - top)
+
+        for face in landmarks:
+            for part in ["left_eye", "right_eye", "nose_bridge", "nose_tip", "top_lip", "bottom_lip"]:
+                if part in face:
+                    # Ajusta coordenadas para a nova imagem cortada e redimensionada
+                    scaled_points = [
+                        (
+                            (x - left) * scale_x,
+                            (y - top) * scale_y
+                        )
+                        for (x, y) in face[part]
+                    ]
+                    draw.line(scaled_points, fill=(0, 255, 0), width=3)
+
+    # 5) ADICIONA LOGO
     logo_path = os.path.join(BASE_DIR, "static", "logo.png")
-    pos_y = selfie.height - 100  # padrão caso logo não exista
+    pos_y = selfie.height - 100
     if os.path.exists(logo_path):
         logo = Image.open(logo_path).convert("RGBA")
-        logo_w = int(selfie.width * 0.2)
+        logo_w = int(selfie.width * 0.25)
         ratio = logo_w / logo.width
         logo_h = int(logo.height * ratio)
         logo = logo.resize((logo_w, logo_h), Image.LANCZOS)
-
-        # posição: canto inferior centralizado
         pos_x = (selfie.width - logo_w) // 2
-        pos_y = selfie.height - logo_h - 20
+        pos_y = selfie.height - logo_h - 40
         selfie.paste(logo, (pos_x, pos_y), logo)
 
-    # 5) ESCREVE O TOP 3 RESULTADOS COM CONTORNO PRETO
+    # 6) ESCREVE O TOP 3 RESULTADOS
     try:
-        font_texto = ImageFont.truetype("arial.ttf", max(20, selfie.width // 18))
+        font_texto = ImageFont.truetype("arial.ttf", 60)
     except:
         font_texto = ImageFont.load_default()
 
-    y_text = pos_y - (len(resultados) * (font_texto.size + 5)) - 10
+    y_text = pos_y - (len(resultados) * (font_texto.size + 10)) - 20
     for grupo, score in resultados:
         label = group_labels.get(grupo, {}).get("label", grupo)
         texto = f"{label}: {score}%"
@@ -195,15 +230,15 @@ def gerar_imagem_resultado(selfie_path, resultados):
             font=font_texto,
             fill=(255, 255, 255),
             outline=(0, 0, 0),
-            outline_width=2
+            outline_width=3
         )
-        y_text += font_texto.size + 5
+        y_text += font_texto.size + 10
 
-    # 6) SALVA
-    unique_result_name = f"{uuid.uuid4().hex}_resultado.png"
+    # 7) SALVA
+    unique_result_name = f"{uuid.uuid4().hex}_resultado.jpg"
     output_path = os.path.join(UPLOAD_FOLDER, unique_result_name)
-    selfie.save(output_path)
-    print(f"✅ Imagem com efeitos, logo e texto contornado salva: {output_path}", flush=True)
+    selfie.save(output_path, "JPEG", quality=95, optimize=True)
+    print(f"✅ Imagem 1080x1920 com rosto centralizado e pontos faciais salva: {output_path}", flush=True)
 
     return unique_result_name
 
