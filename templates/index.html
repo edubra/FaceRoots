@@ -367,37 +367,46 @@
             }
         });
 
-        captureBtn.addEventListener("click", () => {
-            const videoRatio = video.videoWidth / video.videoHeight;
-            const targetRatio = 9 / 16;
-            let cropWidth = video.videoWidth;
-            let cropHeight = video.videoHeight;
+captureBtn.addEventListener("click", () => {
+    const targetWidth = 1080;
+    const targetHeight = 1920;
+    const videoRatio = video.videoWidth / video.videoHeight;
+    const targetRatio = targetWidth / targetHeight;
 
-            if (videoRatio > targetRatio) {
-                cropWidth = video.videoHeight * targetRatio;
-            } else {
-                cropHeight = video.videoWidth / targetRatio;
-            }
+    let cropWidth = video.videoWidth;
+    let cropHeight = video.videoHeight;
 
-            const offsetX = (video.videoWidth - cropWidth) / 2;
-            const offsetY = (video.videoHeight - cropHeight) / 2;
+    if (videoRatio > targetRatio) {
+        cropWidth = video.videoHeight * targetRatio;
+    } else {
+        cropHeight = video.videoWidth / targetRatio;
+    }
 
-            canvas.width = cropWidth;
-            canvas.height = cropHeight;
-            ctx.drawImage(video, offsetX, offsetY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+    const offsetX = (video.videoWidth - cropWidth) / 2;
+    const offsetY = (video.videoHeight - cropHeight) / 2;
 
-            canvas.toBlob(blob => {
-                const file = new File([blob], "selfie.png", { type: "image/png" });
-                const dataTransfer = new DataTransfer();
-                dataTransfer.items.add(file);
-                fileInput.files = dataTransfer.files;
-                previewImg.src = URL.createObjectURL(blob);
-                previewContainer.style.display = "block";
-                cameraFrame.style.display = "none";
-                cameraActions.style.display = "none";
-                stream.getTracks().forEach(track => track.stop());
-            });
-        });
+    // ✅ Força a foto final a ter 1080x1920
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+
+    ctx.save();
+    ctx.translate(canvas.width, 0); 
+    ctx.scale(-1, 1); // ✅ Mantém espelhado igual à câmera
+    ctx.drawImage(video, offsetX, offsetY, cropWidth, cropHeight, 0, 0, targetWidth, targetHeight);
+    ctx.restore();
+
+    canvas.toBlob(blob => {
+        const file = new File([blob], "selfie.png", { type: "image/png" });
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        fileInput.files = dataTransfer.files;
+        previewImg.src = URL.createObjectURL(blob);
+        previewContainer.style.display = "block";
+        cameraFrame.style.display = "none";
+        cameraActions.style.display = "none";
+        stream.getTracks().forEach(track => track.stop());
+    }, "image/png", 1.0); // ✅ Qualidade máxima
+});
 
         changePhotoBtn.addEventListener("click", () => {
             previewContainer.style.display = "none";
