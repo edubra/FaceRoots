@@ -6,7 +6,7 @@ import numpy as np
 import pickle
 import uuid
 import time
-from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError, ImageOps
+from PIL import Image, ImageDraw, ImageFont, UnidentifiedImageError, ImageOps, ImageEnhance, ImageFilter
 import pillow_heif  # ✅ necessário para abrir HEIC/HEIF corretamente
 from group_labels import group_labels
 
@@ -116,36 +116,97 @@ def calcular_miscigenacao(macro_percent):
     diversidade = 1 - sum([p ** 2 for p in proporcoes])
     return round(diversidade * 100, 1)
 
+from PIL import ImageEnhance, ImageFilter
+import math
+
+def draw_text_with_outline(draw, text, position, font, fill, outline, outline_width=2):
+    """Desenha texto com contorno (outline)"""
+    x, y = position
+    # Desenha o contorno (stroke)
+    for ox in range(-outline_width, outline_width + 1):
+        for oy in range(-outline_width, outline_width + 1):
+            if ox != 0 or oy != 0:
+                draw.text((x + ox, y + oy), text, font=font, fill=outline)
+    # Desenha o texto principal
+    draw.text((x, y), text, font=font, fill=fill)
+
 
 def gerar_imagem_resultado(selfie_path, resultados):
-    print(f"🖼️ Gerando imagem de resultado para: {selfie_path}", flush=True)
-    selfie = Image.open(selfie_path).convert("RGB").resize((250, 250))
-    largura = 600
-    altura = 400 + (len(resultados) * 40)
-    img_final = Image.new("RGB", (largura, altura), (245, 243, 235))
-    draw = ImageDraw.Draw(img_final)
+    print(f"🖼️ Gerando imagem com efeitos FaceRoots: {selfie_path}", flush=True)
 
+    # 1) ABRE A IMAGEM E APLICA EFEITOS
+    selfie = Image.open(selfie_path).convert("RGB")
+    selfie = ImageEnhance.Color(selfie).enhance(0.01)  # menos saturação
+    selfie = selfie.filter(ImageFilter.GaussianBlur(radius=2))  # leve desfoque
+    draw = ImageDraw.Draw(selfie)
+
+    # 2) DESENHA OS PONTOS FACIAIS (no tamanho original)
+    landmarks = face_recognition.face_landmarks(face_recognition.load_image_file(selfie_path))
+    for face in landmarks:
+        for part in ["left_eye", "right_eye", "nose_bridge", "nose_tip", "top_lip", "bottom_lip"]:
+            if part in face:
+                draw.line(face[part], fill=(0, 255, 0), width=3)
+
+    # 3) CORTA EM 9:16 A PARTIR DO CENTRO
+    w, h = selfie.size
+    target_ratio = 9 / 16
+    new_w, new_h = w, h
+    if (w / h) > target_ratio:
+        new_w = int(h * target_ratio)
+    else:
+        new_h = int(w / target_ratio)
+    left = (w - new_w) // 2
+    top = (h - new_h) // 2
+    right = left + new_w
+    bottom = top + new_h
+    selfie = selfie.crop((left, top, right, bottom))
+    draw = ImageDraw.Draw(selfie)
+
+    # 4) CARREGA A LOGO
+    logo_path = os.path.join(BASE_DIR, "static", "facerootslogo.png")
+    pos_y = selfie.height - 100  # padrão caso logo não exista
+    if os.path.exists(logo_path):
+        logo = Image.open(logo_path).convert("RGBA")
+        logo_w = int(selfie.width * 0.2)
+        ratio = logo_w / logo.width
+        logo_h = int(logo.height * ratio)
+        logo = logo.resize((logo_w, logo_h), Image.LANCZOS)
+
+        # posição: canto inferior centralizado
+        pos_x = (selfie.width - logo_w) // 2
+        pos_y = selfie.height - logo_h - 20
+        selfie.paste(logo, (pos_x, pos_y), logo)
+
+    # 5) ESCREVE O TOP 3 RESULTADOS COM CONTORNO PRETO
     try:
-        font_titulo = ImageFont.truetype("arial.ttf", 32)
-        font_texto = ImageFont.truetype("arial.ttf", 24)
+        font_texto = ImageFont.truetype("arial.ttf", max(20, selfie.width // 18))
     except:
-        font_titulo = ImageFont.load_default()
         font_texto = ImageFont.load_default()
 
-    draw.text((20, 20), "FaceRoots - Suas Origens", fill=(62, 74, 44), font=font_titulo)
-    img_final.paste(selfie, (20, 80))
-
-    y_text = 80
+    y_text = pos_y - (len(resultados) * (font_texto.size + 5)) - 10
     for grupo, score in resultados:
         label = group_labels.get(grupo, {}).get("label", grupo)
-        draw.text((300, y_text), f"{label}: {score}%", fill=(74, 100, 61), font=font_texto)
-        y_text += 40
+        texto = f"{label}: {score}%"
+        text_w = draw.textlength(texto, font=font_texto)
+        draw_text_with_outline(
+            draw,
+            texto,
+            ((selfie.width - text_w) // 2, y_text),
+            font=font_texto,
+            fill=(255, 255, 255),
+            outline=(0, 0, 0),
+            outline_width=2
+        )
+        y_text += font_texto.size + 5
 
+    # 6) SALVA
     unique_result_name = f"{uuid.uuid4().hex}_resultado.png"
     output_path = os.path.join(UPLOAD_FOLDER, unique_result_name)
-    img_final.save(output_path)
-    print(f"✅ Imagem de resultado salva: {output_path}", flush=True)
+    selfie.save(output_path)
+    print(f"✅ Imagem com efeitos, logo e texto contornado salva: {output_path}", flush=True)
+
     return unique_result_name
+
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -240,3 +301,4 @@ load_or_create_encodings()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
+#blablabla
