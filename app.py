@@ -163,7 +163,7 @@ def gerar_imagem_resultado(selfie_path, resultados):
     draw = ImageDraw.Draw(selfie)
 
     # 4) CARREGA A LOGO
-    logo_path = os.path.join(BASE_DIR, "static", "facerootslogo.png")
+    logo_path = os.path.join(BASE_DIR, "static", "logo.png")
     pos_y = selfie.height - 100  # padrão caso logo não exista
     if os.path.exists(logo_path):
         logo = Image.open(logo_path).convert("RGBA")
