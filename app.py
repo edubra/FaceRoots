@@ -24,7 +24,7 @@ else:
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-app = Flask(__name__, static_url_path="/faceroots/static", static_folder="static")
+app = Flask(__name__, static_url_path="/static", static_folder="static")
 app.config["APPLICATION_ROOT"] = "/faceroots"
 
 # ✅ Registro do opener HEIF (fundamental para abrir HEIC)
@@ -137,7 +137,7 @@ def gerar_imagem_resultado(selfie_path, resultados):
     original = Image.open(selfie_path).convert("RGB")
     original = ImageOps.exif_transpose(original)
     original = ImageEnhance.Color(original).enhance(0.01)
-   
+
     # 2) DETECTA ROSTO PARA CENTRALIZAR
     img_array = np.array(original)
     face_locations = face_recognition.face_locations(img_array)
@@ -180,45 +180,42 @@ def gerar_imagem_resultado(selfie_path, resultados):
 
     draw = ImageDraw.Draw(selfie)
 
-    # 4) DESENHA OS PONTOS FACIAIS (na imagem já cortada e redimensionada)
+    # 4) DESENHA OS PONTOS FACIAIS
     landmarks = face_recognition.face_landmarks(img_array)
     if landmarks:
         scale_x = target_w / (right - left)
         scale_y = target_h / (bottom - top)
-
         for face in landmarks:
             for part in ["left_eye", "right_eye", "nose_bridge", "nose_tip", "top_lip", "bottom_lip"]:
                 if part in face:
-                    # Ajusta coordenadas para a nova imagem cortada e redimensionada
                     scaled_points = [
-                        (
-                            (x - left) * scale_x,
-                            (y - top) * scale_y
-                        )
+                        ((x - left) * scale_x, (y - top) * scale_y)
                         for (x, y) in face[part]
                     ]
                     draw.line(scaled_points, fill=(0, 255, 0), width=3)
 
-    # 5) ADICIONA LOGO
-    logo_path = os.path.join(BASE_DIR, "static", "logo.png")
+    # 5) ADICIONA LOGO (proporcional)
+    logo_path = os.path.join(BASE_DIR, "static", "logo2.png")
     pos_y = selfie.height - 100
     if os.path.exists(logo_path):
         logo = Image.open(logo_path).convert("RGBA")
-        logo_w = int(selfie.width * 0.25)
+        logo_w = int(selfie.width * 0.35)  # antes era 0.25
         ratio = logo_w / logo.width
         logo_h = int(logo.height * ratio)
         logo = logo.resize((logo_w, logo_h), Image.LANCZOS)
         pos_x = (selfie.width - logo_w) // 2
-        pos_y = selfie.height - logo_h - 40
+        pos_y = selfie.height - logo_h - int(selfie.height * 0.03)
         selfie.paste(logo, (pos_x, pos_y), logo)
 
-    # 6) ESCREVE O TOP 3 RESULTADOS
+    # 6) ESCREVE O TOP 3 RESULTADOS (proporcional)
     try:
-        font_texto = ImageFont.truetype("arial.ttf", 60)
+        font_size = int(selfie.width * 0.06)  # antes era fixo (60)
+        font_texto = ImageFont.truetype("arial.ttf", font_size)
     except:
         font_texto = ImageFont.load_default()
 
-    y_text = pos_y - (len(resultados) * (font_texto.size + 10)) - 20
+    y_text = pos_y - (len(resultados) * (font_texto.size + int(selfie.height * 0.01))) - int(selfie.height * 0.02)
+
     for grupo, score in resultados:
         label = group_labels.get(grupo, {}).get("label", grupo)
         texto = f"{label}: {score}%"
@@ -230,18 +227,16 @@ def gerar_imagem_resultado(selfie_path, resultados):
             font=font_texto,
             fill=(255, 255, 255),
             outline=(0, 0, 0),
-            outline_width=3
+            outline_width=int(selfie.width * 0.003)
         )
-        y_text += font_texto.size + 10
+        y_text += font_texto.size + int(selfie.height * 0.01)
 
     # 7) SALVA
     unique_result_name = f"{uuid.uuid4().hex}_resultado.jpg"
     output_path = os.path.join(UPLOAD_FOLDER, unique_result_name)
     selfie.save(output_path, "JPEG", quality=95, optimize=True)
     print(f"✅ Imagem 1080x1920 com rosto centralizado e pontos faciais salva: {output_path}", flush=True)
-
     return unique_result_name
-
 
 
 @app.route("/", methods=["GET", "POST"])
