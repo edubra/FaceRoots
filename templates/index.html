@@ -11,6 +11,7 @@
             background-color: #ffffff;
             margin: 0;
             padding: 0;
+            overflow-x: hidden;
         }
         h1 {
             color: #4a643d;
@@ -18,7 +19,6 @@
             font-size: 2.2rem;
         }
 
-        /* ✅ Vídeo */
         .video-container {
             margin: 20px auto;
             max-width: 1000px;
@@ -32,7 +32,6 @@
             display: block;
         }
 
-        /* ✅ Logo superior */
         .logo-container {
             display: none;
             margin: 5px auto 10px auto;
@@ -44,7 +43,6 @@
             height: auto;
         }
 
-        /* ✅ Texto */
         .intro-text {
             font-size: 1.2rem;
             color: #333;
@@ -54,7 +52,6 @@
             margin-right: auto;
         }
 
-        /* ✅ Botões principais */
         .start-btn,
         .btn-continue,
         .btn-refazer {
@@ -83,7 +80,6 @@
             transform: translateY(1px);
         }
 
-        /* ✅ Botão "Usar outra foto" */
         .btn-change {
             display: flex;
             align-items: center;
@@ -108,7 +104,6 @@
             transform: translateY(1px);
         }
 
-        /* ✅ Ícones de escolha */
         .icon-container {
             display: none;
             justify-content: center;
@@ -138,7 +133,6 @@
             transform: scale(0.85);
         }
 
-        /* ✅ Preview Responsivo */
         .preview-container {
             display: none;
             position: relative;
@@ -168,7 +162,6 @@
             flex-wrap: wrap;
         }
 
-        /* ✅ Logo inferior fixa */
         .bottom-logo {
             margin: 20px auto;
             max-width: 180px;
@@ -178,7 +171,7 @@
             height: auto;
         }
 
-        /* ✅ Loader */
+        /* ✅ NOVO LOADER - VIAGEM NO TEMPO */
         #loader {
             display: none;
             position: absolute;
@@ -186,29 +179,106 @@
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
-            z-index: 10;
+            z-index: 999;
         }
-        .spinner {
-            border: 6px solid #f3f3f3;
-            border-top: 6px solid #4a643d;
+        .loader-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+        .circle {
+            width: 100%;
+            height: 100%;
+            border: 3px solid #4a643d;
             border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto;
+            position: relative;
+            box-shadow: 0 0 15px #4a643d;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .sun {
+            width: 30px;
+            height: 30px;
+            background: yellow;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: -70px center;
+            animation: rotate 3s linear infinite;
+            box-shadow: 0 0 15px yellow;
         }
-        #loader p {
-            font-size: 16px;
-            color: #4a643d;
-            margin-top: 10px;
+        .moon {
+            width: 25px;
+            height: 25px;
+            background: #ccc;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform-origin: 70px center;
+            animation: rotate-reverse 4s linear infinite;
+            box-shadow: 0 0 8px #aaa;
+        }
+        @keyframes rotate {
+            0% { transform: rotate(0deg) translateX(70px); }
+            100% { transform: rotate(360deg) translateX(70px); }
+        }
+        @keyframes rotate-reverse {
+            0% { transform: rotate(0deg) translateX(-70px); }
+            100% { transform: rotate(-360deg) translateX(-70px); }
+        }
+        .year-counter {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2rem;
             font-weight: bold;
+            color: #4a643d;
+            text-shadow: 0 0 10px #90caf9, 0 0 20px #90caf9;
+            transition: text-shadow 0.1s ease;
+        }
+        .year-counter.glow {
+            text-shadow: 0 0 20px #fff, 0 0 40px #90caf9;
+            transform: translate(-50%, -50%) scale(1.2); /* ✅ Mantém centralizado */
+        }
+        .finished {
+            animation: flash 1s ease forwards;
+        }
+        @keyframes flash {
+            0% { background-color: transparent; color:#4a643d; }
+            50% { background-color: #4a643d; color: #fff; box-shadow:0 0 100px #fff; }
+            100% { background-color: transparent; color: #4a643d; }
         }
 
-        /* ✅ Frame da câmera */
+        /* ✅ Efeito de explosão */
+        .boom {
+            position: fixed;
+            top:0; left:0;
+            width:100%; height:100%;
+            background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 70%);
+            opacity:0;
+            z-index:1000;
+            pointer-events:none;
+            animation: boomFlash 0.8s ease forwards;
+        }
+        @keyframes boomFlash {
+            0% { opacity:0; }
+            30% { opacity:1; }
+            100% { opacity:0; }
+        }
+
+        /* ✅ Face overlay escondido por padrão */
+        #face-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            opacity: 0.6;
+            pointer-events: none;
+        }
         .camera-frame {
             position: relative;
             width: 60vw;
@@ -224,28 +294,15 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            transform: scalex(-1);
-        }
-        #face-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            opacity: 0.6;
-            pointer-events: none;
+            transform: scaleX(-1);
         }
         .camera-actions {
             display: none;
             margin-top: 15px;
             text-align: center;
         }
-
         @media (max-width: 600px) {
-            .camera-frame {
-                width: 90vw;
-            }
+            .camera-frame { width: 90vw; }
         }
     </style>
 </head>
@@ -281,10 +338,19 @@
 
     <div class="preview-container" id="preview-container">
         <img id="preview-img" src="" alt="Preview">
+
+        <!-- ✅ NOVO LOADER -->
         <div id="loader">
-            <div class="spinner"></div>
-            <p>Analisando seu rosto, aguarde...</p>
+            <div class="loader-container">
+                <div class="circle">
+                    <div class="sun"></div>
+                    <div class="moon"></div>
+                </div>
+                <div class="year-counter" id="year-counter">2025</div>
+            </div>
+            <p>Viajando no tempo... Aguarde</p>
         </div>
+
         <div class="btns">
             <button class="btn-change" id="change-photo">Usar outra foto</button>
             <button class="btn-continue" id="continue-btn">Continuar</button>
@@ -305,10 +371,15 @@
 
     <canvas id="canvas" style="display:none;"></canvas>
 
-    <!-- ✅ LOGO SEMPRE VISÍVEL NO FINAL -->
     <div class="bottom-logo">
         <img src="/faceroots/static/powered.png" alt="Marca">
     </div>
+
+    <!-- ✅ Efeito de explosão -->
+    <div id="boom" class="boom"></div>
+
+    <!-- ✅ Som -->
+    <audio id="time-sound" src="/faceroots/static/time_travel.mp3" preload="auto"></audio>
 
     <script>
         const startBtn = document.getElementById("start-btn");
@@ -332,6 +403,10 @@
         const cameraFrame = document.getElementById("camera-frame");
         const captureBtn = document.getElementById("capture-btn");
         const cameraActions = document.getElementById("camera-actions");
+        const yearCounter = document.getElementById("year-counter");
+        const boom = document.getElementById("boom");
+        const timeSound = document.getElementById("time-sound");
+        const faceOverlay = document.getElementById("face-overlay");
         let stream;
 
         startBtn.addEventListener("click", () => {
@@ -358,6 +433,7 @@
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 video.srcObject = stream;
+                faceOverlay.style.display = "block"; // ✅ Mostra o overlay apenas com a câmera
                 initialOptions.style.display = "none";
                 chooseText.style.display = "none";
                 cameraFrame.style.display = "block";
@@ -367,46 +443,37 @@
             }
         });
 
-captureBtn.addEventListener("click", () => {
-    const targetWidth = 1080;
-    const targetHeight = 1920;
-    const videoRatio = video.videoWidth / video.videoHeight;
-    const targetRatio = targetWidth / targetHeight;
-
-    let cropWidth = video.videoWidth;
-    let cropHeight = video.videoHeight;
-
-    if (videoRatio > targetRatio) {
-        cropWidth = video.videoHeight * targetRatio;
-    } else {
-        cropHeight = video.videoWidth / targetRatio;
-    }
-
-    const offsetX = (video.videoWidth - cropWidth) / 2;
-    const offsetY = (video.videoHeight - cropHeight) / 2;
-
-    // ✅ Força a foto final a ter 1080x1920
-    canvas.width = targetWidth;
-    canvas.height = targetHeight;
-
-    ctx.save();
-    ctx.translate(canvas.width, 0); 
-    ctx.scale(-1, 1); // ✅ Mantém espelhado igual à câmera
-    ctx.drawImage(video, offsetX, offsetY, cropWidth, cropHeight, 0, 0, targetWidth, targetHeight);
-    ctx.restore();
-
-    canvas.toBlob(blob => {
-        const file = new File([blob], "selfie.png", { type: "image/png" });
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        fileInput.files = dataTransfer.files;
-        previewImg.src = URL.createObjectURL(blob);
-        previewContainer.style.display = "block";
-        cameraFrame.style.display = "none";
-        cameraActions.style.display = "none";
-        stream.getTracks().forEach(track => track.stop());
-    }, "image/png", 1.0); // ✅ Qualidade máxima
-});
+        captureBtn.addEventListener("click", () => {
+            const targetWidth = 1080;
+            const targetHeight = 1920;
+            const videoRatio = video.videoWidth / video.videoHeight;
+            const targetRatio = targetWidth / targetHeight;
+            let cropWidth = video.videoWidth;
+            let cropHeight = video.videoHeight;
+            if (videoRatio > targetRatio) { cropWidth = video.videoHeight * targetRatio; }
+            else { cropHeight = video.videoWidth / targetRatio; }
+            const offsetX = (video.videoWidth - cropWidth) / 2;
+            const offsetY = (video.videoHeight - cropHeight) / 2;
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            ctx.save();
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, offsetX, offsetY, cropWidth, cropHeight, 0, 0, targetWidth, targetHeight);
+            ctx.restore();
+            canvas.toBlob(blob => {
+                const file = new File([blob], "selfie.png", { type: "image/png" });
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+                previewImg.src = URL.createObjectURL(blob);
+                previewContainer.style.display = "block";
+                cameraFrame.style.display = "none";
+                cameraActions.style.display = "none";
+                faceOverlay.style.display = "none"; // ✅ Some após capturar
+                stream.getTracks().forEach(track => track.stop());
+            }, "image/png", 1.0);
+        });
 
         changePhotoBtn.addEventListener("click", () => {
             previewContainer.style.display = "none";
@@ -415,10 +482,36 @@ captureBtn.addEventListener("click", () => {
             fileInput.value = "";
         });
 
+        // ✅ ANIMAÇÃO DE VIAGEM NO TEMPO
         continueBtn.addEventListener("click", () => {
             previewContainer.classList.add("loading");
             loader.style.display = "block";
-            uploadForm.submit();
+
+            let year = 2025;
+            let speed = 500; // começa devagar
+            timeSound.currentTime = 0;
+            timeSound.play();
+
+            function countdown() {
+                year--;
+                yearCounter.textContent = year;
+                yearCounter.classList.toggle("glow");
+
+                if (year <= 0) {
+                    yearCounter.textContent = "0";
+                    boom.style.display = "block";
+                    setTimeout(() => {
+                        uploadForm.submit();
+                    }, 800);
+                    return;
+                }
+
+                // acelera progressivamente (com limite mínimo de 5ms)
+                speed = Math.max(5, speed * 0.92);
+                setTimeout(countdown, speed);
+            }
+
+            countdown();
         });
     </script>
 </body>
