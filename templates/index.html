@@ -11,7 +11,7 @@
             background-color: #ffffff;
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
+            overflow: hidden;
         }
         h1 {
             color: #4a643d;
@@ -175,28 +175,33 @@
         #loader {
             display: none;
             position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 999;
+            overflow: hidden;
+        }
+        .loader-container {
+            position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 999;
-        }
-        .loader-container {
-            position: relative;
             width: 200px;
             height: 200px;
         }
         .circle {
             width: 100%;
             height: 100%;
-            border: 3px solid #4a643d;
+            border: 3px solid #90caf9;
             border-radius: 50%;
             position: relative;
-            box-shadow: 0 0 15px #4a643d;
+            box-shadow: 0 0 15px #90caf9;
         }
         .sun {
-            width: 30px;
-            height: 30px;
+            width: 50px;
+            height: 50px;
             background: yellow;
             border-radius: 50%;
             position: absolute;
@@ -233,13 +238,14 @@
             transform: translate(-50%, -50%);
             font-size: 2rem;
             font-weight: bold;
-            color: #4a643d;
+            color: #90caf9;
             text-shadow: 0 0 10px #90caf9, 0 0 20px #90caf9;
-            transition: text-shadow 0.1s ease;
+            transition: filter 0.1s ease;
         }
         .year-counter.glow {
             text-shadow: 0 0 20px #fff, 0 0 40px #90caf9;
-            transform: translate(-50%, -50%) scale(1.2); /* ✅ Mantém centralizado */
+            transform: translate(-50%, -50%) scale(1.2);
+            filter: blur(2px); /* ✅ Borrão dinâmico */
         }
         .finished {
             animation: flash 1s ease forwards;
@@ -249,25 +255,67 @@
             50% { background-color: #4a643d; color: #fff; box-shadow:0 0 100px #fff; }
             100% { background-color: transparent; color: #4a643d; }
         }
+        .travel-text {
+            position: absolute;
+            top: 25%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #90caf9;
+            font-size: 0.8rem;
+            font-weight: bold;
+                text-shadow: 
+        -1px -1px 0 #000,  
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000; /* ✅ Stroke preto */
+}
 
-        /* ✅ Efeito de explosão */
-        .boom {
-            position: fixed;
-            top:0; left:0;
-            width:100%; height:100%;
-            background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 70%);
-            opacity:0;
-            z-index:1000;
-            pointer-events:none;
-            animation: boomFlash 0.8s ease forwards;
+        /* ✅ Partículas (estrelas) */
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
         }
-        @keyframes boomFlash {
-            0% { opacity:0; }
-            30% { opacity:1; }
-            100% { opacity:0; }
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgb(0, 0, 0);
+            border-radius: 50%;
+            animation: moveParticle linear infinite;
+        }
+        @keyframes moveParticle {
+            from { transform: translateY(-10px); opacity: 1; }
+            to { transform: translateY(110vh); opacity: 0; }
         }
 
-        /* ✅ Face overlay escondido por padrão */
+        /* ✅ Texto carregando */
+.loading-text {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #90caf9;
+    font-size: 1rem;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    text-shadow: 
+        -1px -1px 0 #000,  
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000; /* ✅ Stroke preto */
+}
+.loading-text.visible {
+    opacity: 1;
+}
+        .loading-text.visible {
+            opacity: 1;
+        }
+
+        /* Face overlay escondido */
         #face-overlay {
             display: none;
             position: absolute;
@@ -339,16 +387,18 @@
     <div class="preview-container" id="preview-container">
         <img id="preview-img" src="" alt="Preview">
 
-        <!-- ✅ NOVO LOADER -->
+        <!-- ✅ LOADER -->
         <div id="loader">
+            <div class="particles" id="particles"></div>
             <div class="loader-container">
                 <div class="circle">
                     <div class="sun"></div>
                     <div class="moon"></div>
                 </div>
+                <div class="travel-text">Viajando no tempo...</div> 
                 <div class="year-counter" id="year-counter">2025</div>
+                <div class="loading-text" id="loading-text">CARREGANDO RESULTADOS</div>
             </div>
-            <p>Viajando no tempo... Aguarde</p>
         </div>
 
         <div class="btns">
@@ -375,10 +425,6 @@
         <img src="/faceroots/static/powered.png" alt="Marca">
     </div>
 
-    <!-- ✅ Efeito de explosão -->
-    <div id="boom" class="boom"></div>
-
-    <!-- ✅ Som -->
     <audio id="time-sound" src="/faceroots/static/time_travel.mp3" preload="auto"></audio>
 
     <script>
@@ -404,7 +450,8 @@
         const captureBtn = document.getElementById("capture-btn");
         const cameraActions = document.getElementById("camera-actions");
         const yearCounter = document.getElementById("year-counter");
-        const boom = document.getElementById("boom");
+        const loadingText = document.getElementById("loading-text");
+        const particlesContainer = document.getElementById("particles");
         const timeSound = document.getElementById("time-sound");
         const faceOverlay = document.getElementById("face-overlay");
         let stream;
@@ -433,7 +480,7 @@
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 video.srcObject = stream;
-                faceOverlay.style.display = "block"; // ✅ Mostra o overlay apenas com a câmera
+                faceOverlay.style.display = "block";
                 initialOptions.style.display = "none";
                 chooseText.style.display = "none";
                 cameraFrame.style.display = "block";
@@ -470,7 +517,7 @@
                 previewContainer.style.display = "block";
                 cameraFrame.style.display = "none";
                 cameraActions.style.display = "none";
-                faceOverlay.style.display = "none"; // ✅ Some após capturar
+                faceOverlay.style.display = "none";
                 stream.getTracks().forEach(track => track.stop());
             }, "image/png", 1.0);
         });
@@ -482,37 +529,97 @@
             fileInput.value = "";
         });
 
-        // ✅ ANIMAÇÃO DE VIAGEM NO TEMPO
-        continueBtn.addEventListener("click", () => {
-            previewContainer.classList.add("loading");
-            loader.style.display = "block";
-
-            let year = 2025;
-            let speed = 500; // começa devagar
-            timeSound.currentTime = 0;
-            timeSound.play();
-
-            function countdown() {
-                year--;
-                yearCounter.textContent = year;
-                yearCounter.classList.toggle("glow");
-
-                if (year <= 0) {
-                    yearCounter.textContent = "0";
-                    boom.style.display = "block";
-                    setTimeout(() => {
-                        uploadForm.submit();
-                    }, 800);
-                    return;
-                }
-
-                // acelera progressivamente (com limite mínimo de 5ms)
-                speed = Math.max(5, speed * 0.92);
-                setTimeout(countdown, speed);
+        // ✅ Criar partículas dinâmicas
+        function createParticles() {
+            particlesContainer.innerHTML = "";
+            for (let i = 0; i < 100; i++) {
+                const p = document.createElement("div");
+                p.classList.add("particle");
+                p.style.left = Math.random() * 100 + "vw";
+                p.style.top = Math.random() * 100 + "vh";
+                p.style.animationDuration = 0.5 + Math.random() * 1.5 + "s";
+                particlesContainer.appendChild(p);
             }
+        }
 
-            countdown();
-        });
+        // ✅ ANIMAÇÃO DE VIAGEM NO TEMPO
+continueBtn.addEventListener("click", () => {
+    previewContainer.classList.add("loading");
+    loader.style.display = "block";
+    createParticles();
+
+    let year = 2025;
+    let speed = 300;
+    timeSound.currentTime = 0;
+    timeSound.play();
+
+    let blurActive = false;
+    let blurStartTime = 0;
+    let blurEndTime = 0;
+
+    function countdown() {
+        year--;
+        yearCounter.textContent = year;
+
+        // ✅ Controle de ativação do blur baseado em tempo
+        if (year === 2010 && !blurActive) {
+            blurActive = true;
+            blurStartTime = performance.now();
+        }
+
+        if (year === 40 && blurActive) {
+            blurActive = false;
+            blurEndTime = performance.now();
+        }
+
+        // ✅ Cálculo do blur suave (entra em 2s, sai em 2s)
+        if (blurActive && year <= 2010 && year > 40) {
+            const elapsed = (performance.now() - blurStartTime) / 2000;
+            const blurAmount = Math.min(2, elapsed * 2); // entra suavemente em 2s
+            yearCounter.style.filter = `blur(${blurAmount}px)`;
+            yearCounter.style.textShadow = `0 0 ${5 + blurAmount * 10}px #90caf9`;
+        } 
+        else if (!blurActive && year <= 40 && year > 0) {
+            const elapsed = (performance.now() - blurEndTime) / 2000;
+            const blurAmount = Math.max(0, 2 - elapsed * 2); // sai suavemente em 2s
+            yearCounter.style.filter = `blur(${blurAmount}px)`;
+            yearCounter.style.textShadow = `0 0 ${5 + blurAmount * 10}px #90caf9`;
+        } 
+        else {
+            yearCounter.style.filter = "blur(0px)";
+            yearCounter.style.textShadow = "0 0 10px #90caf9";
+        }
+
+        if (year <= 0) {
+            yearCounter.textContent = "0";
+            yearCounter.style.filter = "blur(0px)";
+            loadingText.classList.add("visible");
+            setTimeout(() => {
+                uploadForm.submit();
+            }, 1500);
+            return;
+        }
+
+        // ✅ Lógica de aceleração/desaceleração (mantida)
+        if (year > 2000) {
+            speed = Math.max(50, speed * 0.95);
+        } 
+        else if (year > 100) {
+            speed = Math.max(2, speed * 0.85);
+        } 
+        else if (year > 3) {
+            speed = Math.min(200, speed * 1.05);
+        } 
+        else {
+            speed = Math.min(500, speed * 1.1);
+        }
+
+        setTimeout(countdown, speed);
+    }
+
+    countdown();
+});
+
     </script>
 </body>
 </html>
