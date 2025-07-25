@@ -266,44 +266,36 @@
 <script>
 const img = document.querySelector(".resultado-img");
 
-// ✅ Compartilhar
-document.getElementById("shareBtn").addEventListener("click", async () => {
+/document.getElementById("shareBtn").addEventListener("click", async () => {
     if (!img) {
         alert("Imagem não encontrada!");
         return;
     }
 
-    // Se o navegador permitir compartilhar arquivos
-    if (navigator.canShare && navigator.canShare({ files: [] })) {
+    try {
         const response = await fetch(img.src);
         const blob = await response.blob();
         const file = new File([blob], "resultado.jpg", { type: blob.type });
 
-        try {
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({
                 title: "Meu resultado no FaceRoots",
                 text: "Olha só meu resultado no FaceRoots! Descubra suas raízes também:",
                 files: [file]
             });
-        } catch (error) {
-            console.log("Usuário cancelou ou houve erro", error);
+        } else {
+            // ✅ Fallback com link público absoluto (necessário para WhatsApp)
+            const publicURL = new URL(img.src, window.location.origin).href;
+            const whatsappURL = `https://wa.me/?text=${encodeURIComponent(
+                "Olha só meu resultado no FaceRoots! Descubra suas raízes também: " + publicURL
+            )}`;
+            window.open(whatsappURL, "_blank");
         }
-
-    } else if (navigator.share) {
-        // Compartilha apenas o link se não suportar arquivos
-        try {
-            await navigator.share({
-                title: "Meu resultado no FaceRoots",
-                text: "Olha só meu resultado no FaceRoots! Descubra suas raízes também:",
-                url: img.src
-            });
-        } catch (error) {
-            console.log("Erro no compartilhamento", error);
-        }
-    } else {
-        alert("Compartilhamento não suportado neste navegador.");
+    } catch (error) {
+        console.log("Erro no compartilhamento", error);
     }
 });
+
 
 // ✅ Salvar
 document.getElementById("saveBtn").addEventListener("click", () => {
