@@ -231,22 +231,34 @@
             0% { transform: rotate(0deg) translateX(-70px); }
             100% { transform: rotate(-360deg) translateX(-70px); }
         }
-        .year-counter {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 2rem;
-            font-weight: bold;
-            color: #90caf9;
-            text-shadow: 0 0 10px #90caf9, 0 0 20px #90caf9;
-            transition: filter 0.1s ease;
-        }
-        .year-counter.glow {
-            text-shadow: 0 0 20px #fff, 0 0 40px #90caf9;
-            transform: translate(-50%, -50%) scale(1.2);
-            filter: blur(2px); /* ✅ Borrão dinâmico */
-        }
+.year-counter {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2rem;
+    font-weight: bold;
+    color: #90caf9;
+    text-shadow: 
+        -1px -1px 0 #000,  
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000; /* ✅ Stroke preto */
+    transition: filter 0.1s ease;
+}
+
+.year-counter.glow {
+    text-shadow: 
+        -1px -1px 0 #000,  
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000,
+        0 0 20px #fff,
+        0 0 40px #90caf9; /* ✅ Mantém o stroke e adiciona o glow */
+    transform: translate(-50%, -50%) scale(1.2);
+    filter: blur(2px);
+}
+
         .finished {
             animation: flash 1s ease forwards;
         }
