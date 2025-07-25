@@ -6,6 +6,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
+    <script type="text/javascript" src="https://platform-api.sharethis.com/js/sharethis.js#property=6882cbc1a2891372bdbfc44f&product=inline-share-buttons&source=platform" async="async"></script>
+
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -206,67 +208,69 @@
     <!-- ✅ 2 - IMAGEM DE COMPARTILHAMENTO -->
    <img src="{{ url_for('static', filename='uploads/' + img_compartilhavel) }}" class="resultado-img"> 
 
-<!-- ✅ 3 - BOTÕES DE COMPARTILHAMENTO -->
-<div class="share-buttons">
-    <button class="btn-share instagram" onclick="shareToApp('instagram')"><i class="fab fa-instagram"></i></button>
-    <button class="btn-share whatsapp" onclick="shareToApp('whatsapp')"><i class="fab fa-whatsapp"></i></button>
-    <button class="btn-share facebook" onclick="shareToApp('facebook')"><i class="fab fa-facebook-f"></i></button>
-    <button class="btn-share twitter" onclick="shareToApp('twitter')"><i class="fab fa-x-twitter"></i></button>
-    <button class="btn-share telegram" onclick="shareToApp('telegram')"><i class="fab fa-telegram-plane"></i></button>
-    <button class="btn-share" style="background:#444;" onclick="downloadImage()"><i class="fa fa-download"></i></button>
-</div>
+<!-- Botão de Compartilhar -->
+<button id="shareBtn" style="
+    background:#25d366;
+    color:white;
+    border:none;
+    padding:10px 15px;
+    border-radius:8px;
+    font-size:16px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:10px;
+">
+    <i class="fas fa-share-alt"></i> Compartilhar
+</button>
+
+<!-- Font Awesome para o ícone -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <script>
-    const imageUrl = document.querySelector(".resultado-img").src;
-    const pageUrl = window.location.href;
-    const message = "Olha meu resultado no FaceRoots!";
+document.getElementById("shareBtn").addEventListener("click", async () => {
+    const img = document.querySelector(".resultado-img"); // pega a imagem do resultado
 
-    async function shareToApp(app) {
-        if (navigator.canShare && navigator.canShare({ files: [] })) {
-            try {
-                const response = await fetch(imageUrl);
-                const blob = await response.blob();
-                const file = new File([blob], "resultado.jpg", { type: blob.type });
-
-                await navigator.share({
-                    files: [file],
-                    title: "Meu resultado FaceRoots",
-                    text: message
-                });
-            } catch (err) {
-                console.log("Compartilhamento cancelado ou não suportado", err);
-                fallbackShare(app);
-            }
-        } else {
-            fallbackShare(app);
-        }
+    if (!img) {
+        alert("Imagem não encontrada!");
+        return;
     }
 
-   // ✅ Fallback para navegadores sem Web Share API
-        function fallbackShare(app) {
-            const encodedText = encodeURIComponent(`${message} ${pageUrl}`);
-            const encodedUrl = encodeURIComponent(pageUrl);
+    if (navigator.canShare && navigator.canShare({ files: [] })) {
+        // Se for uma imagem local convertida para arquivo (Blob)
+        const response = await fetch(img.src);
+        const blob = await response.blob();
+        const file = new File([blob], "resultado.jpg", { type: blob.type });
 
-            const links = {
-                instagram: `https://www.instagram.com/?url=${encodedUrl}`,
-                whatsapp: `https://api.whatsapp.com/send?text=${encodedText}`,
-                facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
-                twitter: `https://twitter.com/intent/tweet?text=${encodedText}`,
-                telegram: `https://t.me/share/url?url=${encodedUrl}&text=${encodedText}`
-            };
-
-            window.open(links[app], "_blank");
+        try {
+            await navigator.share({
+                title: "Meu resultado no FaceRoots",
+                text: "Olha só meu resultado no FaceRoots! Descubra suas raízes também:",
+                files: [file]
+            });
+            console.log("Compartilhado com sucesso!");
+        } catch (error) {
+            console.log("Usuário cancelou ou houve erro", error);
         }
 
-    function downloadImage() {
-        const link = document.createElement("a");
-        link.href = imageUrl;
-        link.download = "resultado.jpg";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    } else if (navigator.share) {
+        // Se não suportar arquivos, compartilha apenas o link
+        try {
+            await navigator.share({
+                title: "Meu resultado no FaceRoots",
+                text: "Olha só meu resultado no FaceRoots! Descubra suas raízes também:",
+                url: img.src
+            });
+        } catch (error) {
+            console.log("Erro no compartilhamento", error);
+        }
+    } else {
+        alert("Compartilhamento não suportado neste navegador.");
     }
+});
 </script>
+
 
 
     <!-- ✅ 4 NOVO TEXTO: maior semelhança -->
