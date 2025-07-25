@@ -209,7 +209,7 @@ def gerar_imagem_resultado(selfie_path, resultados):
 
     # 6) ESCREVE O TOP 3 RESULTADOS (proporcional)
     try:
-        font_size = int(selfie.width * 0.06)  # antes era fixo (60)
+        font_size = int(selfie.width * 0.2)  # antes era fixo (60)
         font_texto = ImageFont.truetype("arial.ttf", font_size)
     except:
         font_texto = ImageFont.load_default()
