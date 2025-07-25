@@ -133,11 +133,11 @@ def draw_text_with_outline(draw, text, position, font, fill, outline, outline_wi
 def gerar_imagem_resultado(selfie_path, resultados):
     print(f"🖼️ Gerando imagem 1080x1920 centralizada no rosto: {selfie_path}", flush=True)
 
-    # 1) ABRE A IMAGEM E APLICA EFEITOS
+    # 1) ABRE E APLICA EFEITO DE SATURAÇÃO BAIXA
     original = Image.open(selfie_path).convert("RGB")
     original = ImageOps.exif_transpose(original)
-    original = ImageEnhance.Color(original).enhance(0.01)
-
+    original = ImageEnhance.Color(original).enhance(0.01)  # Pouco saturado
+    
     # 2) DETECTA ROSTO PARA CENTRALIZAR
     img_array = np.array(original)
     face_locations = face_recognition.face_locations(img_array)
@@ -147,14 +147,14 @@ def gerar_imagem_resultado(selfie_path, resultados):
         face_center_x = (left + right) // 2
         face_center_y = (top + bottom) // 2
     else:
-        print("⚠️ Nenhum rosto detectado na centralização. Usando corte central padrão.", flush=True)
+        print("⚠️ Nenhum rosto detectado. Usando corte central padrão.", flush=True)
         face_center_x = original.width // 2
         face_center_y = original.height // 2
 
-    # 3) CALCULA CORTE 9:16 EM TORNO DO ROSTO
+    # 3) CORTE 9:16 EM TORNO DO ROSTO
     target_w, target_h = 1080, 1920
-    selfie_ratio = original.width / original.height
     target_ratio = target_w / target_h
+    selfie_ratio = original.width / original.height
 
     if selfie_ratio > target_ratio:
         new_height = original.height
@@ -177,10 +177,9 @@ def gerar_imagem_resultado(selfie_path, resultados):
 
     selfie = original.crop((int(left), int(top), int(right), int(bottom)))
     selfie = selfie.resize((target_w, target_h), Image.LANCZOS)
-
     draw = ImageDraw.Draw(selfie)
 
-    # 4) DESENHA OS PONTOS FACIAIS
+    # 4) DESENHA PONTOS FACIAIS EM VERDE NEON
     landmarks = face_recognition.face_landmarks(img_array)
     if landmarks:
         scale_x = target_w / (right - left)
@@ -192,30 +191,30 @@ def gerar_imagem_resultado(selfie_path, resultados):
                         ((x - left) * scale_x, (y - top) * scale_y)
                         for (x, y) in face[part]
                     ]
-                    draw.line(scaled_points, fill=(0, 255, 0), width=3)
+                    draw.line(scaled_points, fill=(57, 255, 20), width=4)  # Verde neon
 
-    # 5) ADICIONA LOGO (proporcional)
+    # 5) ADICIONA LOGO (50% DA LARGURA)
     logo_path = os.path.join(BASE_DIR, "static", "logo2.png")
-    pos_y = selfie.height - 100
     if os.path.exists(logo_path):
         logo = Image.open(logo_path).convert("RGBA")
-        logo_w = int(selfie.width * 0.35)  # antes era 0.25
+        logo_w = int(selfie.width * 0.5)
         ratio = logo_w / logo.width
         logo_h = int(logo.height * ratio)
         logo = logo.resize((logo_w, logo_h), Image.LANCZOS)
         pos_x = (selfie.width - logo_w) // 2
         pos_y = selfie.height - logo_h - int(selfie.height * 0.03)
         selfie.paste(logo, (pos_x, pos_y), logo)
+    else:
+        pos_y = selfie.height - int(selfie.height * 0.1)
 
-    # 6) ESCREVE O TOP 3 RESULTADOS (proporcional)
+    # 6) ESCREVE TOP 3 (FONTE MAIOR + CONTORNO)
     try:
-        font_size = int(selfie.width * 0.2)  # antes era fixo (60)
+        font_size = int(selfie.width * 0.07)  # ~7% da largura (bem visível)
         font_texto = ImageFont.truetype("arial.ttf", font_size)
     except:
         font_texto = ImageFont.load_default()
 
-    y_text = pos_y - (len(resultados) * (font_texto.size + int(selfie.height * 0.01))) - int(selfie.height * 0.02)
-
+    y_text = pos_y - (len(resultados) * (font_texto.size + int(selfie.height * 0.015))) - int(selfie.height * 0.03)
     for grupo, score in resultados:
         label = group_labels.get(grupo, {}).get("label", grupo)
         texto = f"{label}: {score}%"
@@ -227,9 +226,9 @@ def gerar_imagem_resultado(selfie_path, resultados):
             font=font_texto,
             fill=(255, 255, 255),
             outline=(0, 0, 0),
-            outline_width=int(selfie.width * 0.003)
+            outline_width=int(selfie.width * 0.004)
         )
-        y_text += font_texto.size + int(selfie.height * 0.01)
+        y_text += font_texto.size + int(selfie.height * 0.015)
 
     # 7) SALVA
     unique_result_name = f"{uuid.uuid4().hex}_resultado.jpg"
