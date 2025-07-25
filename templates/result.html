@@ -20,7 +20,17 @@
             color: #000000; 
             margin-top: 20px; 
         }
-
+                /* ✅ Logo superior */
+        .logo-container {
+            display: block;
+            margin: 5px auto 10px auto;
+            max-width: 150px;
+        }
+        .logo-container img {
+            max-width: 100%;
+            max-height: 10vh;
+            height: auto;
+        }
         .card {
             background: #fff;
             border-radius: 10px;
@@ -202,43 +212,67 @@
         }
     </style>
 </head>
+
 <body>
+     <div class="logo-container" id="logo-container">
+        <img src="/faceroots/static/facerootslogo.png" alt="FaceRoots Logo">
+    </div>
+
     <h1>Resultado do FaceRoots</h1>
 
     <!-- ✅ 2 - IMAGEM DE COMPARTILHAMENTO -->
    <img src="{{ url_for('static', filename='uploads/' + img_compartilhavel) }}" class="resultado-img"> 
+<!-- Bloco de Botões -->
+<div style="margin-top:15px; display:flex; gap:10px; justify-content:center;">
 
-<!-- Botão de Compartilhar -->
-<button id="shareBtn" style="
-    background:#25d366;
-    color:white;
-    border:none;
-    padding:10px 15px;
-    border-radius:8px;
-    font-size:16px;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    gap:8px;
-    margin-top:10px;
-">
-    <i class="fas fa-share-alt"></i> Compartilhar
-</button>
+    <!-- Botão Compartilhar -->
+    <button id="shareBtn" style="
+        background:#25d366;
+        color:white;
+        border:none;
+        padding:10px 15px;
+        border-radius:8px;
+        font-size:16px;
+        cursor:pointer;
+        display:flex;
+        align-items:center;
+        gap:8px;
+    ">
+        <i class="fas fa-share-alt"></i> Compartilhar
+    </button>
 
-<!-- Font Awesome para o ícone -->
+    <!-- Botão Salvar -->
+    <button id="saveBtn" style="
+        background:#007bff;
+        color:white;
+        border:none;
+        padding:10px 15px;
+        border-radius:8px;
+        font-size:16px;
+        cursor:pointer;
+        display:flex;
+        align-items:center;
+        gap:8px;
+    ">
+        <i class="fas fa-download"></i> Salvar
+    </button>
+</div>
+
+<!-- Font Awesome para os ícones -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <script>
-document.getElementById("shareBtn").addEventListener("click", async () => {
-    const img = document.querySelector(".resultado-img"); // pega a imagem do resultado
+const img = document.querySelector(".resultado-img");
 
+// ✅ Compartilhar
+document.getElementById("shareBtn").addEventListener("click", async () => {
     if (!img) {
         alert("Imagem não encontrada!");
         return;
     }
 
+    // Se o navegador permitir compartilhar arquivos
     if (navigator.canShare && navigator.canShare({ files: [] })) {
-        // Se for uma imagem local convertida para arquivo (Blob)
         const response = await fetch(img.src);
         const blob = await response.blob();
         const file = new File([blob], "resultado.jpg", { type: blob.type });
@@ -249,13 +283,12 @@ document.getElementById("shareBtn").addEventListener("click", async () => {
                 text: "Olha só meu resultado no FaceRoots! Descubra suas raízes também:",
                 files: [file]
             });
-            console.log("Compartilhado com sucesso!");
         } catch (error) {
             console.log("Usuário cancelou ou houve erro", error);
         }
 
     } else if (navigator.share) {
-        // Se não suportar arquivos, compartilha apenas o link
+        // Compartilha apenas o link se não suportar arquivos
         try {
             await navigator.share({
                 title: "Meu resultado no FaceRoots",
@@ -268,6 +301,21 @@ document.getElementById("shareBtn").addEventListener("click", async () => {
     } else {
         alert("Compartilhamento não suportado neste navegador.");
     }
+});
+
+// ✅ Salvar
+document.getElementById("saveBtn").addEventListener("click", () => {
+    if (!img) {
+        alert("Imagem não encontrada!");
+        return;
+    }
+
+    const link = document.createElement("a");
+    link.href = img.src;
+    link.download = "resultado.jpg";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 });
 </script>
 
