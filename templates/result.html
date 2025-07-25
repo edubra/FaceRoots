@@ -221,7 +221,8 @@
     <h1>Resultado do FaceRoots</h1>
 
     <!-- ✅ 2 - IMAGEM DE COMPARTILHAMENTO -->
-  <img src="/static/uploads/{{ img_compartilhavel }}" class="resultado-img">
+<!-- CORRETO -->
+<img src="{{ url_for('static', filename='uploads/' + img_compartilhavel) }}" class="resultado-img">
 
 <!-- Bloco de Botões -->
 <div style="margin-top:15px; display:flex; gap:10px; justify-content:center;">
