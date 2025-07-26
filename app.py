@@ -193,42 +193,50 @@ def gerar_imagem_resultado(selfie_path, resultados):
                     ]
                     draw.line(scaled_points, fill=(57, 255, 20), width=4)  # Verde neon
 
-    # 5) ADICIONA LOGO (50% DA LARGURA)
-    logo_path = os.path.join(BASE_DIR, "static", "logo2.png")
-    if os.path.exists(logo_path):
-        logo = Image.open(logo_path).convert("RGBA")
-        logo_w = int(selfie.width * 0.5)
-        ratio = logo_w / logo.width
-        logo_h = int(logo.height * ratio)
-        logo = logo.resize((logo_w, logo_h), Image.LANCZOS)
-        pos_x = (selfie.width - logo_w) // 2
-        pos_y = selfie.height - logo_h - int(selfie.height * 0.03)
-        selfie.paste(logo, (pos_x, pos_y), logo)
-    else:
-        pos_y = selfie.height - int(selfie.height * 0.1)
+# 5) ADICIONA LOGO (PADRONIZADO)
+logo_path = os.path.join(BASE_DIR, "static", "logo2.png")
+if os.path.exists(logo_path):
+    logo = Image.open(logo_path).convert("RGBA")
 
-    # 6) ESCREVE TOP 3 (FONTE MAIOR + CONTORNO)
-    try:
-        font_size = int(selfie.width * 0.07)  # ~7% da largura (bem visível)
-        font_texto = ImageFont.truetype("arial.ttf", font_size)
-    except:
-        font_texto = ImageFont.load_default()
+    # 🔹 PADRÃO: 540px de largura (50% de 1080) e altura proporcional
+    logo_w = 540
+    ratio = logo_w / logo.width
+    logo_h = int(logo.height * ratio)
 
-    y_text = pos_y - (len(resultados) * (font_texto.size + int(selfie.height * 0.015))) - int(selfie.height * 0.03)
-    for grupo, score in resultados:
-        label = group_labels.get(grupo, {}).get("label", grupo)
-        texto = f"{label}: {score}%"
-        text_w = draw.textlength(texto, font=font_texto)
-        draw_text_with_outline(
-            draw,
-            texto,
-            ((selfie.width - text_w) // 2, y_text),
-            font=font_texto,
-            fill=(255, 255, 255),
-            outline=(0, 0, 0),
-            outline_width=int(selfie.width * 0.004)
-        )
-        y_text += font_texto.size + int(selfie.height * 0.015)
+    logo = logo.resize((logo_w, logo_h), Image.LANCZOS)
+
+    pos_x = (selfie.width - logo_w) // 2
+    pos_y = selfie.height - logo_h - 60  # 🔹 60px de margem inferior fixa
+
+    selfie.paste(logo, (pos_x, pos_y), logo)
+else:
+    pos_y = selfie.height - 200  # 🔹 Caso não tenha logo, 200px de margem inferior fixa
+
+# 6) ESCREVE TOP 3 (FONTE PADRONIZADA)
+try:
+    font_size = 75  # 🔹 ~7% de 1080 (fixo para manter padrão)
+    font_texto = ImageFont.truetype("arial.ttf", font_size)
+except:
+    font_texto = ImageFont.load_default()
+
+# 🔹 Margens e espaçamento fixos
+y_text = pos_y - (len(resultados) * (font_texto.size + 30)) - 60
+
+for grupo, score in resultados:
+    label = group_labels.get(grupo, {}).get("label", grupo)
+    texto = f"{label}: {score}%"
+    text_w = draw.textlength(texto, font=font_texto)
+
+    draw_text_with_outline(
+        draw,
+        texto,
+        ((selfie.width - text_w) // 2, y_text),
+        font=font_texto,
+        fill=(255, 255, 255),
+        outline=(0, 0, 0),
+        outline_width=4  # 🔹 Contorno fixo e proporcional
+    )
+    y_text += font_texto.size + 30
 
     # 7) SALVA
     unique_result_name = f"{uuid.uuid4().hex}_resultado.jpg"
