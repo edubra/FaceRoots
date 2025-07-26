@@ -243,7 +243,8 @@ for grupo, score in resultados:
     output_path = os.path.join(UPLOAD_FOLDER, unique_result_name)
     selfie.save(output_path, "JPEG", quality=95, optimize=True)
     print(f"✅ Imagem 1080x1920 com rosto centralizado e pontos faciais salva: {output_path}", flush=True)
-    return unique_result_name
+    def get_result():
+     return unique_result_name
 
 
 @app.route("/", methods=["GET", "POST"])
