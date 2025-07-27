@@ -216,7 +216,7 @@ def gerar_imagem_resultado(selfie_path, resultados):
 
     font_path = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
     try:
-        font_size = 120  # 🔹 Grande o suficiente para redes sociais
+        font_size = 70  # 🔹 Grande o suficiente para redes sociais
         font_texto = ImageFont.truetype(font_path, font_size)
     except:
         font_texto = ImageFont.load_default()
