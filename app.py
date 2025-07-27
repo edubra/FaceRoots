@@ -214,7 +214,7 @@ def gerar_imagem_resultado(selfie_path, resultados):
 
     # 6) ESCREVE TOP 3 (FONTE PADRONIZADA)
     try:
-        font_size = 150  # 🔹 ~7% de 1080 (fixo para manter padrão)
+        font_size = 75  # 🔹 ~7% de 1080 (fixo para manter padrão)
         font_texto = ImageFont.truetype("arial.ttf", font_size)
     except:
         font_texto = ImageFont.load_default()
@@ -236,7 +236,7 @@ def gerar_imagem_resultado(selfie_path, resultados):
             outline=(0, 0, 0),
             outline_width=4  # 🔹 Contorno fixo e proporcional
         )
-        y_text += font_texto.size + 30
+        y_text += font_texto.size + 100
 
     # 7) SALVA
     unique_result_name = f"{uuid.uuid4().hex}_resultado.jpg"
