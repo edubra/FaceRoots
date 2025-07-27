@@ -212,15 +212,15 @@ def gerar_imagem_resultado(selfie_path, resultados):
     else:
         pos_y = selfie.height - 200  # 🔹 Caso não tenha logo, 200px de margem inferior fixa
 
-    # 6) ESCREVE TOP 3 (FONTE PADRONIZADA)
+    # 6) ESCREVE TOP 3 (FONTE GRANDE PARA 1080x1920)
     try:
-        font_size = 75  # 🔹 ~7% de 1080 (fixo para manter padrão)
+        font_size = 120  # 🔹 Grande o suficiente para redes sociais
         font_texto = ImageFont.truetype("arial.ttf", font_size)
     except:
         font_texto = ImageFont.load_default()
 
-    # 🔹 Margens e espaçamento fixos
-    y_text = pos_y - (len(resultados) * (font_texto.size + 30)) - 60
+# 🔹 Margens e espaçamento otimizados
+    y_text = pos_y - (len(resultados) * (font_texto.size + 50)) - 100
 
     for grupo, score in resultados:
         label = group_labels.get(grupo, {}).get("label", grupo)
@@ -234,9 +234,10 @@ def gerar_imagem_resultado(selfie_path, resultados):
             font=font_texto,
             fill=(255, 255, 255),
             outline=(0, 0, 0),
-            outline_width=4  # 🔹 Contorno fixo e proporcional
+            outline_width=6
         )
-        y_text += font_texto.size + 100
+        y_text += font_texto.size + 50
+
 
     # 7) SALVA
     unique_result_name = f"{uuid.uuid4().hex}_resultado.jpg"
