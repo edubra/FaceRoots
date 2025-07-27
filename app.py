@@ -213,14 +213,16 @@ def gerar_imagem_resultado(selfie_path, resultados):
         pos_y = selfie.height - 200  # 🔹 Caso não tenha logo, 200px de margem inferior fixa
 
     # 6) ESCREVE TOP 3 (FONTE GRANDE PARA 1080x1920)
+
+    font_path = "/usr/share/fonts/truetype/msttcorefonts/Arial.ttf"
     try:
         font_size = 120  # 🔹 Grande o suficiente para redes sociais
-        font_texto = ImageFont.truetype("arial.ttf", font_size)
+        font_texto = ImageFont.truetype(font_path, font_size)
     except:
         font_texto = ImageFont.load_default()
 
 # 🔹 Margens e espaçamento otimizados
-    y_text = pos_y - (len(resultados) * (font_texto.size + 50)) - 100
+    y_text = pos_y - (len(resultados) * (font_texto.size + 60)) - 100
 
     for grupo, score in resultados:
         label = group_labels.get(grupo, {}).get("label", grupo)
@@ -236,7 +238,7 @@ def gerar_imagem_resultado(selfie_path, resultados):
             outline=(0, 0, 0),
             outline_width=6
         )
-        y_text += font_texto.size + 50
+        y_text += font_texto.size + 60
 
 
     # 7) SALVA
