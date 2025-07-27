@@ -8,4 +8,4 @@ sys.path.insert(0, "/var/www/faceroots")
 os.chdir("/var/www/faceroots")
 
 # ✅ Importa o app Flask do app.py
-from app import app as application
+from app import app
