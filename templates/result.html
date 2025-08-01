@@ -266,38 +266,53 @@
 <script>
 const img = document.querySelector(".resultado-img");
 
-/document.getElementById("shareBtn").addEventListener("click", async () => {
+// Corrigido: removi a barra errada antes de "document"
+document.getElementById("shareBtn").addEventListener("click", async () => {
     if (!img) {
         alert("Imagem não encontrada!");
         return;
     }
 
     try {
-        const response = await fetch(img.src);
-        const blob = await response.blob();
-        const file = new File([blob], "resultado.jpg", { type: blob.type });
-
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        // Primeiro tenta usar a API de compartilhamento nativo
+        if (navigator.share) {
+            const response = await fetch(img.src);
+            const blob = await response.blob();
+            const file = new File([blob], "resultado-faceroots.jpg", { type: blob.type });
+            
             await navigator.share({
                 title: "Meu resultado no FaceRoots",
-                text: "Olha só meu resultado no FaceRoots! Descubra suas raízes também:",
+                text: "Descubra suas raízes faciais com o FaceRoots!",
                 files: [file]
             });
-        } else {
-            // ✅ Fallback com link público absoluto (necessário para WhatsApp)
-            const publicURL = new URL(img.src, window.location.origin).href;
-            const whatsappURL = `https://wa.me/?text=${encodeURIComponent(
-                "Olha só meu resultado no FaceRoots! Descubra suas raízes também: " + publicURL
-            )}`;
-            window.open(whatsappURL, "_blank");
+        } 
+        // Fallback para dispositivos sem API de compartilhamento
+        else {
+            // Cria um link temporário para download
+            const link = document.createElement('a');
+            link.href = img.src;
+            link.download = 'resultado-faceroots.jpg';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Mostra opções alternativas
+            alert("Imagem salva! Agora você pode compartilhar manualmente.");
         }
     } catch (error) {
-        console.log("Erro no compartilhamento", error);
+        console.error("Erro ao compartilhar:", error);
+        
+        // Fallback avançado para WhatsApp
+        if (confirm("Deseja compartilhar via WhatsApp?")) {
+            const urlCompleta = window.location.href;
+            window.open(`https://wa.me/?text=${encodeURIComponent(
+                "Veja meu resultado no FaceRoots! Descubra suas raízes: " + urlCompleta
+            )}`, '_blank');
+        }
     }
 });
 
-
-// ✅ Salvar
+// Botão de salvar (mantido igual)
 document.getElementById("saveBtn").addEventListener("click", () => {
     if (!img) {
         alert("Imagem não encontrada!");
@@ -306,7 +321,7 @@ document.getElementById("saveBtn").addEventListener("click", () => {
 
     const link = document.createElement("a");
     link.href = img.src;
-    link.download = "resultado.jpg";
+    link.download = "resultado-faceroots.jpg";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
