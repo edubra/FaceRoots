@@ -143,42 +143,6 @@
 
 
 
-        .share-buttons {
-            margin: 40px auto;
-            display: flex;
-            justify-content: center; /* ✅ Centraliza */
-            gap: 20px; /* ✅ Espaçamento uniforme entre os botões */
-            flex-wrap: wrap;
-            width: 90%;
-            max-width: 800px;
-}
-
-
-        .btn-share {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-size: 48px;
-            text-decoration: none;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .btn-share:hover {
-            transform: scale(1.1);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        .instagram { background: radial-gradient(circle at 30% 30%, #fdf497 0%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
-        .tiktok { background: linear-gradient(45deg, #69C9D0 0%, #EE1D52 50%, #000000 100%); }
-        .whatsapp { background-color: #25d366; }
-        .facebook { background-color: #1877f2; }
-        .twitter { background-color: #000000; }
-        .telegram { background-color: #0088cc; }
-
         .resultado-img {
             max-width: 300px;
             margin: 20px auto;
@@ -273,17 +237,6 @@ function getAbsoluteImageUrl(relativeUrl) {
     if (relativeUrl.startsWith('/')) return window.location.origin + relativeUrl;
     return window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + relativeUrl;
 }
-
-  <script>
-        // 1. Seleção da imagem para compartilhar
-        const img = document.querySelector(".resultado-img");
-
-        // 2. Função para converter para URL absoluta
-        function getAbsoluteImageUrl(relativeUrl) {
-            if (relativeUrl.startsWith('http')) return relativeUrl;
-            if (relativeUrl.startsWith('/')) return window.location.origin + relativeUrl;
-            return window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + relativeUrl;
-        }
 
         // 3. Função de Compartilhamento
         document.getElementById("shareBtn").addEventListener("click", async function() {
