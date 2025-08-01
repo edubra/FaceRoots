@@ -264,75 +264,64 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <script>
-// ✅ 1. Seleciona a imagem de resultado
+// ✅ 1. Seleção segura da imagem
 const img = document.querySelector(".resultado-img");
 
-// ✅ 2. Corrige o botão de compartilhar
-document.getElementById("shareBtn").addEventListener("click", async () => {
-    if (!img || !img.src) {
-        alert("Imagem não encontrada!");
-        return;
-    }
+// ✅ 2. Função para converter para URL absoluta
+function getAbsoluteImageUrl(relativeUrl) {
+    if (relativeUrl.startsWith('http')) return relativeUrl;
+    if (relativeUrl.startsWith('/')) return window.location.origin + relativeUrl;
+    return window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + relativeUrl;
+}
 
-    try {
-        // Converte para URL absoluta se necessário
-        const imgUrl = img.src.startsWith('http') ? img.src : new URL(img.src, window.location.origin).href;
-        
-        // Tenta usar a API de compartilhamento nativo
-        if (navigator.share) {
-            const response = await fetch(imgUrl);
-            const blob = await response.blob();
-            const file = new File([blob], "resultado.jpg", { type: blob.type });
-            
-            await navigator.share({
-                title: "Meu resultado no FaceRoots",
-                text: "Descubra suas raízes faciais com o FaceRoots!",
-                files: [file]
-            });
-        } 
-        // Fallback para WhatsApp
-        else {
-            window.open(`https://wa.me/?text=${encodeURIComponent(
-                "Veja meu resultado no FaceRoots! Descubra suas raízes: " + imgUrl
-            )}`, '_blank');
+  <script>
+        // 1. Seleção da imagem para compartilhar
+        const img = document.querySelector(".resultado-img");
+
+        // 2. Função para converter para URL absoluta
+        function getAbsoluteImageUrl(relativeUrl) {
+            if (relativeUrl.startsWith('http')) return relativeUrl;
+            if (relativeUrl.startsWith('/')) return window.location.origin + relativeUrl;
+            return window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/') + relativeUrl;
         }
-    } catch (error) {
-        console.error("Erro ao compartilhar:", error);
-        alert("Use o botão direito do mouse ou toque prolongado para salvar a imagem.");
-    }
-});
 
-// ✅ 3. Botão de download corrigido
-document.getElementById("saveBtn").addEventListener("click", async () => {
-    if (!img || !img.src) {
-        alert("Imagem não encontrada!");
-        return;
-    }
+        // 3. Função de Compartilhamento
+        document.getElementById("shareBtn").addEventListener("click", async function() {
+            const imgUrl = img.src;
 
-    try {
-        // Converte para URL absoluta
-        const imgUrl = img.src.startsWith('http') ? img.src : new URL(img.src, window.location.origin).href;
-        
-        // Cria link temporário
-        const link = document.createElement("a");
-        link.href = imgUrl;
-        link.download = imgUrl.split('/').pop() || "resultado.jpg"; // Pega o nome do arquivo da URL
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        // Adiciona delay para evitar bloqueios
-        setTimeout(() => {
-            URL.revokeObjectURL(link.href);
-        }, 100);
-    } catch (error) {
-        console.error("Erro ao baixar:", error);
-        alert("Não foi possível baixar a imagem. Tente novamente.");
-    }
-});
-</script>
+            // Verifica se o navegador suporta compartilhamento nativo
+            if (navigator.share) {
+                try {
+                    const response = await fetch(imgUrl);
+                    const blob = await response.blob();
+                    const file = new File([blob], "resultado-faceroots.jpg", { type: blob.type });
 
+                    await navigator.share({
+                        title: "Meu Resultado FaceRoots",
+                        text: "Descubra suas raízes faciais!",
+                        files: [file]
+                    });
+                } catch (error) {
+                    console.error("Erro no compartilhamento:", error);
+                    alert("Erro ao tentar compartilhar!");
+                }
+            } else {
+                alert("Seu navegador não suporta compartilhamento direto.");
+            }
+        });
 
+        // 4. Função de Download
+        document.getElementById("saveBtn").addEventListener("click", function() {
+            const imgUrl = img.src;
+            const link = document.createElement('a');
+            link.href = imgUrl;
+            link.download = imgUrl.split('/').pop() || 'resultado-faceroots.jpg';
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
 
     <!-- ✅ 4 NOVO TEXTO: maior semelhança -->
     <div class="semelhanca-titulo">Seu fenótipo predominante:</div>
