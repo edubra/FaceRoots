@@ -231,33 +231,6 @@
             0% { transform: rotate(0deg) translateX(-70px); }
             100% { transform: rotate(-360deg) translateX(-70px); }
         }
-.year-counter {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 2rem;
-    font-weight: bold;
-    color: #90caf9;
-    text-shadow: 
-        -1px -1px 0 #000,  
-         1px -1px 0 #000,
-        -1px  1px 0 #000,
-         1px  1px 0 #000; /* ✅ Stroke preto */
-    transition: filter 0.1s ease;
-}
-
-.year-counter.glow {
-    text-shadow: 
-        -1px -1px 0 #000,  
-         1px -1px 0 #000,
-        -1px  1px 0 #000,
-         1px  1px 0 #000,
-        0 0 20px #fff,
-        0 0 40px #90caf9; /* ✅ Mantém o stroke e adiciona o glow */
-    transform: translate(-50%, -50%) scale(1.2);
-    filter: blur(2px);
-}
 
         .finished {
             animation: flash 1s ease forwards;
@@ -408,8 +381,7 @@
                     <div class="moon"></div>
                 </div>
                 <div class="travel-text">Viajando no tempo...</div> 
-                <div class="year-counter" id="year-counter">2025</div>
-                <div class="loading-text" id="loading-text">CARREGANDO RESULTADOS</div>
+                <div class="loading-text" id="loading-text">CARREGANDO RESULTADOS, AGUARDE</div>
             </div>
         </div>
 
@@ -461,7 +433,6 @@
         const cameraFrame = document.getElementById("camera-frame");
         const captureBtn = document.getElementById("capture-btn");
         const cameraActions = document.getElementById("camera-actions");
-        const yearCounter = document.getElementById("year-counter");
         const loadingText = document.getElementById("loading-text");
         const particlesContainer = document.getElementById("particles");
         const timeSound = document.getElementById("time-sound");
@@ -554,111 +525,20 @@
             }
         }
 
-// Função para aplicar o efeito de blur
-function applyBlurEffect(year) {
-    const yearCounter = document.getElementById("year-counter");
-    let blurAmount = 0;
-
-    // Aplica o efeito de blur entre 2000 e 20 de forma suave
-    if (year <= 2000 && year > 20) {
-        const elapsed = (performance.now() - blurStartTime) / 2000; // Tempo de transição
-        blurAmount = Math.min(2, elapsed * 2); // Aumenta o blur até 2px
-        yearCounter.style.filter = `blur(${blurAmount}px)`;
-    } else {
-        yearCounter.style.filter = "blur(0px)"; // Sem blur fora do intervalo
-    }
-}
-
-// Lógica de aceleração/desaceleração ajustada
-function setYearSpeed(year) {
-    if (year <= 2025 && year > 2020) {
-        return 500; // 0.5 segundos por ano entre 2025 e 2020
-    } 
-    else if (year <= 2020 && year > 2000) {
-        return 100; // 0.2 segundos por ano entre 2015 e 2000
-    } 
-    else if (year <= 2000 && year > 20) {
-        return 0.01; // 2 segundos no total entre 2000 e 20
-    } 
-    else if (year <= 20 && year > 5) {
-        return 100; // 0.2 segundos por ano entre 15 e 5
-    } 
-    else if (year <= 5 && year > 0) {
-        return 500; // 0.5 segundos por ano entre 5 e 0
-    }
-
-    return 1000; // Para anos menores que 0, um valor padrão (não será atingido)
-}
-
-// Função para aplicar o efeito de blur
-function applyBlurEffect(year) {
-    const yearCounter = document.getElementById("year-counter");
-
-    // Aplica o efeito de blur entre 2000 e 20 de forma simples
-    if (year <= 2000 && year > 20) {
-        yearCounter.style.filter = "blur(2px)"; // Aplica o blur de forma simples
-    } else {
-        yearCounter.style.filter = "blur(0px)"; // Sem blur fora do intervalo
-    }
-}
-
-// Lógica de aceleração/desaceleração ajustada
-function setYearSpeed(year) {
-    if (year <= 2025 && year > 2020) {
-        return 500; // 0.5 segundos por ano entre 2025 e 2020
-    } 
-    else if (year <= 2020 && year > 2000) {
-        return 100; // 0.2 segundos por ano entre 2015 e 2000
-    } 
-    else if (year <= 2000 && year > 20) {
-        return 0.001; // 2 segundos no total entre 2000 e 20
-    } 
-    else if (year <= 20 && year > 5) {
-        return 100; // 0.2 segundos por ano entre 15 e 5
-    } 
-    else if (year <= 5 && year > 0) {
-        return 500; // 0.5 segundos por ano entre 5 e 0
-    }
-
-    return 1000; // Para anos menores que 0, um valor padrão (não será atingido)
-}
-
-function countdown() {
-    let year = 2025; // Começando com 2025
-    const yearCounter = document.getElementById("year-counter"); // Ajuste conforme o seu HTML
-    const loadingText = document.getElementById("loading-text"); // Ajuste conforme o seu HTML
-
-    function decrementYear() {
-        year--; // Decrementa o ano
-        yearCounter.textContent = year;
-
-        // Aplicando o blur de forma simples entre 2000 e 20
-        applyBlurEffect(year);
-
-        if (year <= 5) {
-            yearCounter.textContent = "0";
-            yearCounter.style.filter = "blur(0px)";
+        // Inicia o loader quando o botão de continuar for clicado
+        continueBtn.addEventListener("click", () => {
+            previewContainer.classList.add("loading");
+            loader.style.display = "block";
+            createParticles();
+            
+            // Mostra o texto de carregamento
             loadingText.classList.add("visible");
+            
+            // Submete o formulário após um pequeno delay
             setTimeout(() => {
                 uploadForm.submit();
-            }, 1500);
-            return;
-        }
-
-        const speed = setYearSpeed(year); // Calcula o tempo baseado no ano
-        setTimeout(decrementYear, speed); // Chama novamente a função após o tempo determinado
-    }
-
-    decrementYear(); // Inicia a contagem
-}
-
-// Inicia o contador quando o botão de continuar for clicado
-continueBtn.addEventListener("click", () => {
-    previewContainer.classList.add("loading");
-    loader.style.display = "block";
-    createParticles();
-    countdown();
-});
+            }, 2000);
+        });
 
     </script>
 </body>
